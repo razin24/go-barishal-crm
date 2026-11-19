@@ -590,20 +590,15 @@ async function loadPassengersAndReports() {
       <td><strong>${p.full_name || 'N/A'}</strong></td>
       <td>${p.phone || 'N/A'}</td>
       <td>${counts[p.id] || 0} টি রাইড</td>
-      <td><span class="status-badge sb-green">${p.status || 'active'}</span></td>
+      <td>
+        <span class="status-badge sb-green">${p.status || 'active'}</span>
+        <button class="btn btn-sm btn-white" style="margin-left:8px"
+          onclick="openResetModalForUser('${p.id}', '${(p.full_name || '').replace(/'/g, '')}', 'passenger', '${p.phone || ''}')">
+          🔑 Reset Pass
+        </button>
+      </td>
     </tr>
   `).join('') || '<tr><td colspan="4">কোনো যাত্রী পাওয়া যায়নি।</td></tr>';
-
-  document.getElementById('reports-tbody').innerHTML = (repRes.data || []).map((rep) => `
-    <tr>
-      <td>${rep.created_at ? new Date(rep.created_at).toLocaleString() : 'N/A'}</td>
-      <td><span class="status-badge sb-red">${rep.report_type || 'Report'}</span></td>
-      <td><strong>${rep.reason || ''}</strong><br/><span class="muted-text">${rep.details || ''}</span></td>
-      <td><code>${rep.ride_id || '—'}</code></td>
-      <td><code>${rep.driver_id || '—'}</code></td>
-    </tr>
-  `).join('') || '<tr><td colspan="5">কোনো অভিযোগ রিপোর্ট নেই।</td></tr>';
-}
 
 // ============================================================
 // 9. FARE & APP SETTINGS
@@ -650,3 +645,79 @@ document.getElementById('settings-form').addEventListener('submit', async (e) =>
   if (error) return showToast('সেভ ব্যর্থ: ' + error.message);
   showToast('ভাড়া ও অ্যাপ সেটিংস সফলভাবে আপডেট হয়েছে!');
 });
+// ============================================================
+// 10. ID LOOKUP & PASSWORD RESET MODAL (RPC)
+// ============================================================
+const sb = db;
+
+function openResetModal() {
+  document.getElementById('reset-phone-input').value = '';
+  document.getElementById('reset-new-pass').value = '';
+  document.getElementById('reset-user-box').classList.add('hidden');
+  document.getElementById('reset-modal').classList.remove('hidden');
+}
+
+function closeResetModal() {
+  document.getElementById('reset-modal').classList.add('hidden');
+}
+
+async function openResetModalForUser(userId, fullName, role, phone) {
+  openResetModal();
+  document.getElementById('reset-phone-input').value = phone || '';
+  document.getElementById('reset-target-uid').value = userId;
+  document.getElementById('reset-user-name').textContent = fullName || 'User';
+  document.getElementById('reset-user-role').textContent = role;
+  document.getElementById('reset-user-email').textContent = 'ইমেইল লোড হচ্ছে...';
+  document.getElementById('reset-user-box').classList.remove('hidden');
+
+  if (phone) {
+    await findUserByPhone(phone);
+  }
+}
+
+async function findUserByPhone(prefillPhone) {
+  const p_phone = (prefillPhone || document.getElementById('reset-phone-input').value).trim();
+  if (!p_phone) return showToast('ফোন নম্বর লিখুন');
+
+  const { data, error } = await sb.rpc('admin_find_user_by_phone', { p_phone });
+  if (error || !data) {
+    return showToast('ইউজার পাওয়া যায়নি: ' + (error?.message || 'Not found'));
+  }
+
+  const user = Array.isArray(data) ? data[0] : data;
+  if (!user || (!user.user_id && !user.id && !user.email)) {
+    return showToast('এই ফোন নম্বরে কোনো অ্যাকাউন্ট নেই');
+  }
+
+  document.getElementById('reset-target-uid').value = user.user_id || user.id;
+  document.getElementById('reset-user-name').textContent = user.full_name || 'N/A';
+  document.getElementById('reset-user-role').textContent = user.role || 'user';
+  document.getElementById('reset-user-email').textContent = user.email || 'N/A';
+  document.getElementById('reset-user-box').classList.remove('hidden');
+}
+
+function copyResetEmail() {
+  const email = document.getElementById('reset-user-email').textContent;
+  navigator.clipboard.writeText(email);
+  showToast('Login Email কপি হয়েছে: ' + email);
+}
+
+async function submitNewPassword() {
+  const p_user_id = document.getElementById('reset-target-uid').value;
+  const p_new_password = document.getElementById('reset-new-pass').value.trim();
+
+  if (!p_user_id) return showToast('আগে ইউজার নির্বাচন করুন');
+  if (p_new_password.length < 6) return showToast('পাসওয়ার্ড কমপক্ষে ৬ অক্ষরের হতে হবে');
+
+  const { data, error } = await sb.rpc('admin_reset_user_password', {
+    p_user_id,
+    p_new_password
+  });
+
+  if (error || (data && data.success === false)) {
+    return showToast('পাসওয়ার্ড আপডেট ব্যর্থ: ' + (error?.message || data?.message));
+  }
+
+  showToast('পাসওয়ার্ড সফলভাবে পরিবর্তন হয়েছে!');
+  closeResetModal();
+}
