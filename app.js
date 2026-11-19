@@ -609,32 +609,33 @@ async function loadPassengersAndReports() {
 }
 
 // ============================================================
-// 9. FARE & APP SETTINGS
+// 9. FARE & APP SETTINGS (Synced with public_settings)
 // ============================================================
 async function loadSettings() {
-  const { data, error } = await db.from('app_settings').select('*').eq('id', 1).single();
-  if (error || !data) return showToast('সেটিংস লোড ব্যর্থ হয়েছে');
+  const { data, error } = await db.from('public_settings').select('*').eq('id', 1).single();
+  if (error || !data) return showToast('সেটিংস লোড ব্যর্থ হয়েছে: ' + (error?.message || ''));
 
-  document.getElementById('set-bike-base').value = data.bike_base_fare;
-  document.getElementById('set-bike-km').value = data.bike_per_km;
-  document.getElementById('set-bike-min').value = data.bike_min_fare;
+  document.getElementById('set-bike-base').value = data.bike_base_fare ?? 25;
+  document.getElementById('set-bike-km').value = data.bike_per_km ?? 10;
+  document.getElementById('set-bike-min').value = data.bike_min_fare ?? 30;
 
-  document.getElementById('set-cng-base').value = data.cng_base_fare;
-  document.getElementById('set-cng-km').value = data.cng_per_km;
-  document.getElementById('set-cng-min').value = data.cng_min_fare;
+  document.getElementById('set-cng-base').value = data.cng_base_fare ?? 50;
+  document.getElementById('set-cng-km').value = data.cng_per_km ?? 18;
+  document.getElementById('set-cng-min').value = data.cng_min_fare ?? 60;
 
-  document.getElementById('set-car-base').value = data.car_base_fare;
-  document.getElementById('set-car-km').value = data.car_per_km;
-  document.getElementById('set-car-min').value = data.car_min_fare;
+  document.getElementById('set-car-base').value = data.car_base_fare ?? 120;
+  document.getElementById('set-car-km').value = data.car_per_km ?? 30;
+  document.getElementById('set-car-min').value = data.car_min_fare ?? 150;
 
-  document.getElementById('set-weekly-price').value = data.weekly_package_price;
-  document.getElementById('set-bkash-num').value = data.bkash_number;
-  document.getElementById('set-support-phone').value = data.support_phone;
+  document.getElementById('set-weekly-price').value = data.weekly_pass_price ?? 150;
+  document.getElementById('set-bkash-num').value = data.bkash_number || '';
+  document.getElementById('set-support-phone').value = data.support_phone || '09638306861';
 }
 
 document.getElementById('settings-form').addEventListener('submit', async (e) => {
   e.preventDefault();
   const payload = {
+    id: 1,
     bike_base_fare: parseFloat(document.getElementById('set-bike-base').value),
     bike_per_km: parseFloat(document.getElementById('set-bike-km').value),
     bike_min_fare: parseFloat(document.getElementById('set-bike-min').value),
@@ -644,14 +645,15 @@ document.getElementById('settings-form').addEventListener('submit', async (e) =>
     car_base_fare: parseFloat(document.getElementById('set-car-base').value),
     car_per_km: parseFloat(document.getElementById('set-car-km').value),
     car_min_fare: parseFloat(document.getElementById('set-car-min').value),
-    weekly_package_price: parseFloat(document.getElementById('set-weekly-price').value),
+    weekly_pass_price: parseFloat(document.getElementById('set-weekly-price').value),
     bkash_number: document.getElementById('set-bkash-num').value.trim(),
-    support_phone: document.getElementById('set-support-phone').value.trim()
+    support_phone: document.getElementById('set-support-phone').value.trim(),
+    updated_at: new Date().toISOString()
   };
 
-  const { error } = await db.from('app_settings').update(payload).eq('id', 1);
+  const { error } = await db.from('public_settings').upsert(payload);
   if (error) return showToast('সেভ ব্যর্থ: ' + error.message);
-  showToast('ভাড়া ও অ্যাপ সেটিংস সফলভাবে আপডেট হয়েছে!');
+  showToast('ভাড়া ও বিকাশ নম্বর সফলভাবে সেভ হয়েছে!');
 });
 
 // ============================================================
