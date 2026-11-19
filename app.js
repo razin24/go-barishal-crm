@@ -15,6 +15,7 @@ let lineChartObj = null;
 let fleetMap = null;
 let fleetLayer = null;
 let mapTimer = null;
+let lockCountdownTimer = null;
 
 // Toast Notification
 function showToast(msg) {
@@ -59,8 +60,50 @@ function showTableLoader(tbodyId, colSpan, label = 'ডাটা লোড হ�
 }
 
 // ============================================================
-// 1. AUTHENTICATION & ADMIN ROLE GUARD (SECURE TEMPLATE MOUNT)
+// 1. AUTHENTICATION, 5-MIN LOCKDOWN & ADMIN ROLE GUARD
 // ============================================================
+function enforceLoginLockUI() {
+  const lockUntil = Number(localStorage.getItem('gb_login_lock_until') || 0);
+  const errBox = document.getElementById('login-error');
+  const btn = document.getElementById('login-btn');
+  const emailInput = document.getElementById('login-email');
+  const passInput = document.getElementById('login-password');
+
+  if (!btn || !errBox) return false;
+
+  if (Date.now() < lockUntil) {
+    btn.disabled = true;
+    if (emailInput) emailInput.disabled = true;
+    if (passInput) passInput.disabled = true;
+    errBox.classList.remove('hidden');
+
+    if (lockCountdownTimer) clearInterval(lockCountdownTimer);
+    const updateTimer = () => {
+      const rem = Number(localStorage.getItem('gb_login_lock_until') || 0) - Date.now();
+      if (rem <= 0) {
+        clearInterval(lockCountdownTimer);
+        localStorage.removeItem('gb_login_lock_until');
+        localStorage.removeItem('gb_failed_attempts');
+        btn.disabled = false;
+        btn.textContent = 'সাইন ইন করুন';
+        if (emailInput) emailInput.disabled = false;
+        if (passInput) passInput.disabled = false;
+        errBox.classList.add('hidden');
+        return;
+      }
+      const mins = String(Math.floor(rem / 60000)).padStart(2, '0');
+      const secs = String(Math.floor((rem % 60000) / 1000)).padStart(2, '0');
+      btn.textContent = `লক করা আছে (${mins}:${secs})`;
+      errBox.textContent = `পরপর ৩ বার ভুল পাসওয়ার্ড দেওয়ায় ৫ মিনিটের জন্য লগইন বন্ধ করা হয়েছে। অপেক্ষা করুন: ${mins}:${secs}`;
+    };
+
+    updateTimer();
+    lockCountdownTimer = setInterval(updateTimer, 1000);
+    return true;
+  }
+  return false;
+}
+
 function mountAdminWorkspace() {
   const mount = document.getElementById('secure-app-mount');
   if (!mount || mount.children.length > 0) return;
@@ -150,6 +193,8 @@ document.addEventListener('DOMContentLoaded', async () => {
     window.history.replaceState({}, document.title, window.location.pathname);
   }
 
+  enforceLoginLockUI();
+
   const { data: { session } } = await db.auth.getSession();
   if (session) {
     showGbLoader('ড্যাশবোর্ড লোড হচ্ছে...');
@@ -165,22 +210,17 @@ document.addEventListener('DOMContentLoaded', async () => {
 
 document.getElementById('login-form').addEventListener('submit', async (e) => {
   e.preventDefault();
+  if (enforceLoginLockUI()) return;
+
   const errBox = document.getElementById('login-error');
   const btn = document.getElementById('login-btn');
-
-  const lockUntil = Number(localStorage.getItem('gb_login_lock_until') || 0);
-  if (Date.now() < lockUntil) {
-    const minsLeft = Math.ceil((lockUntil - Date.now()) / 60000);
-    errBox.textContent = `নিরাপত্তাজনিত কারণে লগইন লক করা হয়েছে। ${minsLeft} মিনিট পর আবার চেষ্টা করুন।`;
-    errBox.classList.remove('hidden');
-    return;
-  }
 
   const trap = document.getElementById('bot-trap');
   if (trap && trap.value !== '') return;
 
+  const turnstileEl = document.querySelector('.cf-turnstile');
   const captchaToken = document.querySelector('[name="cf-turnstile-response"]')?.value;
-  if (!captchaToken) {
+  if (turnstileEl && !captchaToken) {
     errBox.textContent = 'অনুগ্রহ করে নিচের নিরাপত্তা যাচাই (CAPTCHA) সম্পন্ন করুন।';
     errBox.classList.remove('hidden');
     return;
@@ -206,11 +246,11 @@ document.getElementById('login-form').addEventListener('submit', async (e) => {
     if (attempts >= 3) {
       localStorage.setItem('gb_login_lock_until', Date.now() + 5 * 60 * 1000);
       localStorage.setItem('gb_failed_attempts', '0');
-      errBox.textContent = 'পরপর ৩ বার ভুল পাসওয়ার্ড দেওয়ায় ৫ মিনিটের জন্য লগইন বন্ধ করা হয়েছে!';
+      enforceLoginLockUI();
     } else {
-      errBox.textContent = `লগইন ব্যর্থ (${attempts}/3): ${error.message}`;
+      errBox.textContent = `ভুল ইমেইল বা পাসওয়ার্ড! সতর্কতা: ${attempts}/3 বার ভুল হয়েছে (৩ বার হলে ৫ মিনিট লক হবে)।`;
+      errBox.classList.remove('hidden');
     }
-    errBox.classList.remove('hidden');
     return;
   }
 
