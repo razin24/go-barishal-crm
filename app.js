@@ -59,11 +59,97 @@ function showTableLoader(tbodyId, colSpan, label = 'ডাটা লোড হ�
 }
 
 // ============================================================
-// 1. AUTHENTICATION & ADMIN ROLE GUARD
+// 1. AUTHENTICATION & ADMIN ROLE GUARD (SECURE TEMPLATE MOUNT)
 // ============================================================
+function mountAdminWorkspace() {
+  const mount = document.getElementById('secure-app-mount');
+  if (!mount || mount.children.length > 0) return;
+  const tpl = document.getElementById('admin-crm-template');
+  if (!tpl) return;
+  mount.appendChild(tpl.content.cloneNode(true));
+  bindWorkspaceForms();
+}
+
+function bindWorkspaceForms() {
+  const settingsForm = document.getElementById('settings-form');
+  if (settingsForm) {
+    settingsForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const payload = {
+        id: 1,
+        bike_base_fare: parseFloat(document.getElementById('set-bike-base').value),
+        bike_per_km: parseFloat(document.getElementById('set-bike-km').value),
+        bike_min_fare: parseFloat(document.getElementById('set-bike-min').value),
+        cng_base_fare: parseFloat(document.getElementById('set-cng-base').value),
+        cng_per_km: parseFloat(document.getElementById('set-cng-km').value),
+        cng_min_fare: parseFloat(document.getElementById('set-cng-min').value),
+        car_base_fare: parseFloat(document.getElementById('set-car-base').value),
+        car_per_km: parseFloat(document.getElementById('set-car-km').value),
+        car_min_fare: parseFloat(document.getElementById('set-car-min').value),
+        weekly_pass_price: parseFloat(document.getElementById('set-weekly-price').value),
+        bkash_number: document.getElementById('set-bkash-num').value.trim(),
+        support_phone: document.getElementById('set-support-phone').value.trim(),
+        updated_at: new Date().toISOString()
+      };
+      const { error } = await db.from('public_settings').upsert(payload);
+      if (error) return showToast('সেভ ব্যর্থ: ' + error.message);
+      showToast('ভাড়া ও বিকাশ নম্বর সফলভাবে সেভ হয়েছে!');
+    });
+  }
+
+  const annForm = document.getElementById('announcement-form');
+  if (annForm) {
+    annForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const payload = {
+        target_app: document.getElementById('ann-target').value,
+        badge_text: document.getElementById('ann-badge').value.trim(),
+        title: document.getElementById('ann-title').value.trim(),
+        message: document.getElementById('ann-message').value.trim(),
+        is_active: true
+      };
+      const { error } = await db.from('app_announcements').insert(payload);
+      if (error) return showToast('পাবলিশ ব্যর্থ: ' + error.message);
+      showToast('নতুন নোটিফিকেশন/বিজ্ঞাপন পাবলিশ হয়েছে!');
+      document.getElementById('ann-title').value = '';
+      document.getElementById('ann-message').value = '';
+      loadAnnouncements();
+    });
+  }
+
+  const promoForm = document.getElementById('promo-form');
+  if (promoForm) {
+    promoForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const expiresRaw = document.getElementById('promo-expires-at').value;
+      const payload = {
+        code: document.getElementById('promo-code').value.trim().toUpperCase(),
+        discount_type: document.getElementById('promo-type').value,
+        discount_value: parseFloat(document.getElementById('promo-value').value),
+        max_discount: parseFloat(document.getElementById('promo-max').value) || 0,
+        min_fare: parseFloat(document.getElementById('promo-min').value) || 0,
+        max_uses_per_user: parseInt(document.getElementById('promo-max-uses').value, 10) || 1,
+        expires_at: expiresRaw ? new Date(expiresRaw).toISOString() : null,
+        is_active: true
+      };
+      if (!payload.code) return showToast('প্রোমো কোড লিখুন');
+      const { error } = await db.from('promo_codes').insert(payload);
+      if (error) return showToast('প্রোমো তৈরি ব্যর্থ: ' + error.message);
+      showToast(`প্রোমো কোড ${payload.code} তৈরি হয়েছে!`);
+      document.getElementById('promo-code').value = '';
+      document.getElementById('promo-value').value = '';
+      document.getElementById('promo-max-uses').value = '1';
+      document.getElementById('promo-expires-at').value = '';
+      loadPromoCodes();
+    });
+  }
+}
+
 document.addEventListener('DOMContentLoaded', async () => {
-  const dateChip = document.getElementById('today-date-chip');
-  if (dateChip) dateChip.textContent = new Date().toLocaleDateString('en-GB');
+  // পুরোনো URL query parameter পরিষ্কার করা
+  if (window.location.search) {
+    window.history.replaceState({}, document.title, window.location.pathname);
+  }
 
   const { data: { session } } = await db.auth.getSession();
   if (session) {
@@ -83,7 +169,6 @@ document.getElementById('login-form').addEventListener('submit', async (e) => {
   const errBox = document.getElementById('login-error');
   const btn = document.getElementById('login-btn');
 
-  // ১. পরপর ৩ বার ভুল পাসওয়ার্ড দিলে ৫ মিনিট লগইন লক
   const lockUntil = Number(localStorage.getItem('gb_login_lock_until') || 0);
   if (Date.now() < lockUntil) {
     const minsLeft = Math.ceil((lockUntil - Date.now()) / 60000);
@@ -92,17 +177,16 @@ document.getElementById('login-form').addEventListener('submit', async (e) => {
     return;
   }
 
-  // ২. লুকানো বট-ট্র্যাপ চেক
   const trap = document.getElementById('bot-trap');
   if (trap && trap.value !== '') return;
 
-  // ৩. Cloudflare Turnstile CAPTCHA টোকেন চেক
- const captchaToken = document.querySelector('[name="cf-turnstile-response"]')?.value;
+  const captchaToken = document.querySelector('[name="cf-turnstile-response"]')?.value;
   if (!captchaToken) {
     errBox.textContent = 'অনুগ্রহ করে নিচের নিরাপত্তা যাচাই (CAPTCHA) সম্পন্ন করুন।';
     errBox.classList.remove('hidden');
     return;
   }
+
   const email = document.getElementById('login-email').value.trim();
   const password = document.getElementById('login-password').value;
 
@@ -110,10 +194,7 @@ document.getElementById('login-form').addEventListener('submit', async (e) => {
   btn.disabled = true;
   btn.textContent = 'যাচাই করা হচ্ছে...';
 
-  const { data, error } = await db.auth.signInWithPassword({
-    email,
-    password
-  });
+  const { data, error } = await db.auth.signInWithPassword({ email, password });
 
   if (window.turnstile) turnstile.reset();
   btn.disabled = false;
@@ -160,20 +241,23 @@ async function verifyAdminSession(userId) {
     return;
   }
 
+  // কেবল বৈধ অ্যাডমিন হলেই ড্যাশবোর্ড UI মাউন্ট হবে
+  mountAdminWorkspace();
+
+  const dateChip = document.getElementById('today-date-chip');
+  if (dateChip) dateChip.textContent = new Date().toLocaleDateString('en-GB');
   document.getElementById('admin-name-display').textContent = profile.full_name || 'Admin';
   document.getElementById('login-screen').classList.add('hidden');
-  document.getElementById('app-shell').classList.remove('hidden');
+
+  document.getElementById('logout-btn').addEventListener('click', async () => {
+    await db.auth.signOut();
+    location.reload();
+  });
 
   initSidebarEvents();
   await cacheProfiles();
   await loadDashboard();
 }
-
-document.getElementById('logout-btn').addEventListener('click', async () => {
-  await db.auth.signOut();
-  location.reload();
-});
-
 // ============================================================
 // 2. NAVIGATION & TAB ROUTING
 // ============================================================
