@@ -993,3 +993,21 @@ body.initial-boot .gb-preloader {
     font-size: 11px !important;
   }
 }
+/* ============================================================
+   FINAL ZERO-SCROLL SINGLE SCREEN ADJUSTMENT
+   ============================================================ */
+@media (min-width: 901px) {
+  #tab-dashboard .chart-canvas-wrap,
+  #tab-dashboard .doughnut-layout {
+    height: 135px !important;
+  }
+
+  #tab-dashboard .doughnut-box {
+    width: 118px !important;
+    height: 118px !important;
+  }
+
+  #tab-dashboard .performer-list {
+    max-height: 135px !important;
+  }
+}
