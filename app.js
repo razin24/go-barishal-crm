@@ -16,6 +16,7 @@ let fleetMap = null;
 let fleetLayer = null;
 let mapTimer = null;
 
+// Toast Notification
 function showToast(msg) {
   const box = document.getElementById('toast-container');
   const item = document.createElement('div');
@@ -31,7 +32,6 @@ function showToast(msg) {
 document.addEventListener('DOMContentLoaded', async () => {
   const dateChip = document.getElementById('today-date-chip');
   if (dateChip) dateChip.textContent = new Date().toLocaleDateString('en-GB');
-
   const { data: { session } } = await db.auth.getSession();
   if (session) {
     await verifyAdminSession(session.user.id);
@@ -49,23 +49,16 @@ document.getElementById('login-form').addEventListener('submit', async (e) => {
   btn.disabled = true;
   btn.textContent = 'যাচাই করা হচ্ছে...';
 
-  try {
-    const { data, error } = await db.auth.signInWithPassword({ email, password });
-    btn.disabled = false;
-    btn.textContent = 'সাইন ইন করুন';
+  const { data, error } = await db.auth.signInWithPassword({ email, password });
+  btn.disabled = false;
+  btn.textContent = 'সাইন ইন করুন';
 
-    if (error) {
-      errBox.textContent = 'লগইন ব্যর্থ: ' + error.message;
-      errBox.classList.remove('hidden');
-      return;
-    }
-    await verifyAdminSession(data.user.id);
-  } catch (err) {
-    btn.disabled = false;
-    btn.textContent = 'সাইন ইন করুন';
-    errBox.textContent = 'নেটওয়ার্ক ত্রুটি: ' + err.message;
+  if (error) {
+    errBox.textContent = 'লগইন ব্যর্থ: ' + error.message;
     errBox.classList.remove('hidden');
+    return;
   }
+  await verifyAdminSession(data.user.id);
 });
 
 async function verifyAdminSession(userId) {
@@ -78,7 +71,7 @@ async function verifyAdminSession(userId) {
 
   if (error || !profile || profile.role !== 'admin') {
     await db.auth.signOut();
-    errBox.textContent = 'Access Denied: Admin privileges required (Role is not admin)';
+    errBox.textContent = 'Access Denied: Admin privileges required';
     errBox.classList.remove('hidden');
     return;
   }
@@ -140,7 +133,7 @@ async function cacheProfiles() {
 }
 
 // ============================================================
-// 3. DASHBOARD OVERVIEW & CHARTS
+// 3. DASHBOARD OVERVIEW & STARADMIN CHARTS
 // ============================================================
 async function loadDashboard() {
   await cacheProfiles();
@@ -216,13 +209,22 @@ function renderStarAdminCharts(completedRides, bikeCnt, cngCnt, carCnt) {
     type: 'bar',
     data: {
       labels,
-      datasets: [{ label: 'Completed Rides', data: counts, backgroundColor: '#1F3BB3', borderRadius: 6, barThickness: 24 }]
+      datasets: [{
+        label: 'Completed Rides',
+        data: counts,
+        backgroundColor: '#1F3BB3',
+        borderRadius: 6,
+        barThickness: 24
+      }]
     },
     options: {
       responsive: true,
       maintainAspectRatio: false,
       plugins: { legend: { display: false } },
-      scales: { x: { grid: { display: false } }, y: { beginAtZero: true, border: { display: false } } }
+      scales: {
+        x: { grid: { display: false } },
+        y: { beginAtZero: true, border: { display: false } }
+      }
     }
   });
 
@@ -233,9 +235,18 @@ function renderStarAdminCharts(completedRides, bikeCnt, cngCnt, carCnt) {
     type: 'doughnut',
     data: {
       labels: ['Bike', 'CNG', 'Car'],
-      datasets: [{ data: [bikeCnt, cngCnt, carCnt], backgroundColor: ['#1F3BB3', '#38BDF8', '#2DD4BF'], borderWidth: 0 }]
+      datasets: [{
+        data: [bikeCnt, cngCnt, carCnt],
+        backgroundColor: ['#1F3BB3', '#38BDF8', '#2DD4BF'],
+        borderWidth: 0
+      }]
     },
-    options: { cutout: '68%', responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } }
+    options: {
+      cutout: '68%',
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: { legend: { display: false } }
+    }
   });
 
   document.getElementById('fleet-legend').innerHTML = `
@@ -261,7 +272,15 @@ function renderStarAdminCharts(completedRides, bikeCnt, cngCnt, carCnt) {
         pointBackgroundColor: '#1F3BB3'
       }]
     },
-    options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { x: { grid: { display: false } }, y: { beginAtZero: true } } }
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: { legend: { display: false } },
+      scales: {
+        x: { grid: { display: false } },
+        y: { beginAtZero: true }
+      }
+    }
   });
 }
 
@@ -381,7 +400,6 @@ function renderDriversTable() {
     const prof = allProfilesMap[d.user_id] || allProfilesMap[d.id] || {};
     const exp = d.package_expires_at ? new Date(d.package_expires_at) : null;
     const validPass = exp && exp > now;
-    const safeName = (prof.full_name || 'Rider').replace(/'/g, '');
 
     return `
       <tr>
@@ -399,7 +417,7 @@ function renderDriversTable() {
             </button>
             <button class="btn btn-sm btn-royal" onclick="grantWeeklyPass('${d.id}', '${d.package_expires_at || ''}')">+7 Days</button>
             <button class="btn btn-sm btn-white" onclick="updateFreeRides('${d.id}', ${d.free_rides_left ?? 0})">Free Rides</button>
-            <button class="btn btn-sm btn-white" onclick="openResetModalForUser('${d.user_id || d.id}', '${safeName}', 'driver', '${prof.phone || ''}')">🔑 Reset Pass</button>
+            <button class="btn btn-sm btn-white" onclick="openResetModalForUser('${d.user_id || d.id}', '${(prof.full_name || '').replace(/'/g, '')}', 'driver', '${prof.phone || ''}')">🔑 Reset Pass</button>
           </div>
         </td>
       </tr>
@@ -564,23 +582,20 @@ async function loadPassengersAndReports() {
   const counts = {};
   (ridesRes.data || []).forEach((r) => { counts[r.passenger_id] = (counts[r.passenger_id] || 0) + 1; });
 
-  document.getElementById('passengers-tbody').innerHTML = (profRes.data || []).map((p) => {
-    const safeName = (p.full_name || 'Passenger').replace(/'/g, '');
-    return `
-      <tr>
-        <td><strong>${p.full_name || 'N/A'}</strong></td>
-        <td>${p.phone || 'N/A'}</td>
-        <td>${counts[p.id] || 0} টি রাইড</td>
-        <td>
-          <span class="status-badge sb-green">${p.status || 'active'}</span>
-          <button class="btn btn-sm btn-white" style="margin-left:8px"
-            onclick="openResetModalForUser('${p.id}', '${safeName}', 'passenger', '${p.phone || ''}')">
-            🔑 Reset Pass
-          </button>
-        </td>
-      </tr>
-    `;
-  }).join('') || '<tr><td colspan="4">কোনো যাত্রী পাওয়া যায়নি।</td></tr>';
+  document.getElementById('passengers-tbody').innerHTML = (profRes.data || []).map((p) => `
+    <tr>
+      <td><strong>${p.full_name || 'N/A'}</strong></td>
+      <td>${p.phone || 'N/A'}</td>
+      <td>${counts[p.id] || 0} টি রাইড</td>
+      <td>
+        <span class="status-badge sb-green">${p.status || 'active'}</span>
+        <button class="btn btn-sm btn-white" style="margin-left:8px"
+          onclick="openResetModalForUser('${p.id}', '${(p.full_name || '').replace(/'/g, '')}', 'passenger', '${p.phone || ''}')">
+          🔑 Reset Pass
+        </button>
+      </td>
+    </tr>
+  `).join('') || '<tr><td colspan="4">কোনো যাত্রী পাওয়া যায়নি।</td></tr>';
 
   document.getElementById('reports-tbody').innerHTML = (repRes.data || []).map((rep) => `
     <tr>
@@ -643,17 +658,14 @@ document.getElementById('settings-form').addEventListener('submit', async (e) =>
 // 10. ID LOOKUP & PASSWORD RESET MODAL (RPC)
 // ============================================================
 function openResetModal() {
-  const modal = document.getElementById('reset-modal');
-  if (!modal) return showToast('index.html-এ reset-modal যোগ করা হয়নি');
   document.getElementById('reset-phone-input').value = '';
   document.getElementById('reset-new-pass').value = '';
   document.getElementById('reset-user-box').classList.add('hidden');
-  modal.classList.remove('hidden');
+  document.getElementById('reset-modal').classList.remove('hidden');
 }
 
 function closeResetModal() {
-  const modal = document.getElementById('reset-modal');
-  if (modal) modal.classList.add('hidden');
+  document.getElementById('reset-modal').classList.add('hidden');
 }
 
 async function openResetModalForUser(userId, fullName, role, phone) {
