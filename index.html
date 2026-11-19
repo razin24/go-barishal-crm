@@ -511,6 +511,51 @@
   <button class="floating-gear-btn" title="Fare & App Settings" onclick="switchTab('settings')">⚙️</button>
 
   <!-- Libraries -->
+  <!-- ID & Password Reset Modal -->
+  <div id="recovery-modal" class="modal-backdrop hidden" onclick="if(event.target === this) closeAccountRecoveryModal()">
+    <div class="modal-box">
+      <div class="modal-header">
+        <div>
+          <h3>🔑 ID Lookup &amp; Password Reset</h3>
+          <p class="muted-text">ফোন নম্বর দিয়ে লগইন ইমেইল খুঁজুন অথবা নতুন পাসওয়ার্ড সেট করুন</p>
+        </div>
+        <button class="icon-btn" onclick="closeAccountRecoveryModal()">✕</button>
+      </div>
+
+      <!-- Step 1: Phone Search -->
+      <form id="phone-lookup-form" class="lookup-row">
+        <input type="tel" id="lookup-phone-input" class="sa-input" placeholder="01XXXXXXXXX" required />
+        <button type="submit" id="lookup-submit-btn" class="btn btn-royal btn-sm">🔍 Search</button>
+      </form>
+      <div id="lookup-error" class="error-box hidden"></div>
+
+      <!-- Step 2: Found Account Card & Password Reset -->
+      <div id="lookup-result-box" class="result-panel hidden">
+        <div class="user-summary-card">
+          <div class="summary-row">
+            <span class="muted-text">নাম ও রোল:</span>
+            <span><strong id="rec-user-name">—</strong> <span id="rec-user-role" class="status-badge sb-blue">—</span></span>
+          </div>
+          <div class="summary-row mt-8">
+            <span class="muted-text">Login Email (ID):</span>
+            <span class="trx-chip">
+              <span id="rec-user-email">—</span>
+              <button type="button" class="btn btn-sm btn-white" onclick="copyFoundEmail()">Copy</button>
+            </span>
+          </div>
+        </div>
+
+        <form id="reset-pass-form" class="mt-16">
+          <input type="hidden" id="rec-user-id" />
+          <div class="form-group">
+            <label for="rec-new-password">New Password (min 6 chars)</label>
+            <input type="text" id="rec-new-password" class="sa-input" minlength="6" placeholder="নতুন পাসওয়ার্ড লিখুন (কমপক্ষে ৬ অক্ষর)" required />
+          </div>
+          <button type="submit" id="update-pass-btn" class="btn btn-success btn-block">💾 Update Password</button>
+        </form>
+      </div>
+    </div>
+  </div>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
