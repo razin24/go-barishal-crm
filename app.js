@@ -25,7 +25,20 @@ function showToast(msg) {
   box.appendChild(item);
   setTimeout(() => item.remove(), 3500);
 }
-
+function showTableLoader(tbodyId, colSpan, label = 'ডাটা লোড হচ্ছে...') {
+  const el = document.getElementById(tbodyId);
+  if (!el) return;
+  el.innerHTML = `
+    <tr>
+      <td colspan="${colSpan}">
+        <div class="table-loader-box">
+          <div class="sa-spinner"></div>
+          <span>${label}</span>
+        </div>
+      </td>
+    </tr>
+  `;
+}
 // ============================================================
 // 1. AUTHENTICATION & ADMIN ROLE GUARD
 // ============================================================
