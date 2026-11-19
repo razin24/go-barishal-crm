@@ -212,6 +212,11 @@ async function refreshCurrentTab() {
   if (activeTab === 'passengers') await loadPassengersAndReports();
   if (activeTab === 'settings') await loadSettings();
 }
+async function cacheProfiles() {
+  const { data } = await db.from('profiles').select('id, full_name, phone, role, status');
+  allProfilesMap = {};
+  (data || []).forEach((p) => { allProfilesMap[p.id] = p; });
+}
 // ============================================================
 // 3. DASHBOARD OVERVIEW & STARADMIN CHARTS
 // ============================================================
