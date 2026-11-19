@@ -12,6 +12,66 @@
   <!-- Custom StarAdmin Theme CSS -->
   <link rel="stylesheet" href="styles.css" />
 </head>
+  <div id="toast-container"></div>
+
+  <!-- Go Barishal Branded Preloader -->
+  <div id="gb-preloader" class="gb-preloader fade-out">
+    <div class="gb-loader-card">
+      <div class="gb-pulse-logo">
+        <img src="https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEjwOudMiwKobIHV8HL1YfCk05ap_Uj9WuryyPrvzYHCwSh6yINEfvExRkwwtVRkZjHC6tI7wqo6CgWGm6vGIlsgInkCk2alS2p4EnVPEFDK4bTjg5SueXQuike2nySn89NoEDvhrX51UDbOx_ty-5uSyug6Gkz0an2cjYdTyrNx6mROM-W_dt307u3h1aCb/s1024/logo.png.png" alt="Go Barishal" class="gb-loader-img" />
+      </div>
+      <div class="gb-progress-bar">
+        <div class="gb-progress-fill"></div>
+      </div>
+      <p class="gb-loader-text">ডেটা লোড হচ্ছে, অনুগ্রহ করে অপেক্ষা করুন...</p>
+    </div>
+  </div>
+
+  <!-- =========================================================
+       LOGIN SCREEN (SPLIT HERO BRANDED WITH GO BARISHAL)
+       ========================================================= -->
+  <section id="login-screen" class="login-wrapper">
+    <div class="login-split-card">
+      <!-- Left Brand Showcase -->
+      <div class="login-brand-side">
+        <div class="login-hero-badge">বরিশালের ১ নম্বর রাইড শেয়ারিং নেটওয়ার্ক</div>
+        <h2>Go Barishal<br/><span>Operations &amp; Fleet Console</span></h2>
+        <p>বাইক, সিএনজি ও কার রাইড মনিটরিং, ড্রাইভার ভেরিফিকেশন এবং বিকাশ সাপ্তাহিক পাস ম্যানেজমেন্টের কেন্দ্রীয় নিয়ন্ত্রণ প্যানেল।</p>
+        <div class="login-hero-img-box">
+          <img src="https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEiaj_w63VVcKbFJNTxMXewJTMHZ9CiVN_sjmB1yQqYp15Eafo0z5qnGNRbKu53AYECnchT3S88vzmrid6d_2MXnu3MT8p_bhxb4zIOA3nLwNkFY2AEPmlAKA9uNfZqyd9YImaZq9QiWeNAqFp9AyQaF1ECGsxyKgzmFL53idC7db5wOryhdSupr4Bw1_cR7/s1900/Untitled%20design%20(1).jpg" alt="Go Barishal Fleet" />
+        </div>
+      </div>
+
+      <!-- Right Admin Login Form -->
+      <div class="login-form-side">
+        <div class="login-header">
+          <img src="https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEjwOudMiwKobIHV8HL1YfCk05ap_Uj9WuryyPrvzYHCwSh6yINEfvExRkwwtVRkZjHC6tI7wqo6CgWGm6vGIlsgInkCk2alS2p4EnVPEFDK4bTjg5SueXQuike2nySn89NoEDvhrX51UDbOx_ty-5uSyug6Gkz0an2cjYdTyrNx6mROM-W_dt307u3h1aCb/s1024/logo.png.png" alt="Go Barishal Logo" class="crm-brand-logo" />
+          <h1>Admin Sign In</h1>
+          <p>সুপার অ্যাডমিন অ্যাকাউন্ট দিয়ে লগইন করুন</p>
+        </div>
+        <form id="login-form">
+          <input type="text" id="bot-trap" name="website_url" tabindex="-1" autocomplete="off" style="position:absolute;left:-9999px;opacity:0;" />
+
+          <div class="form-group">
+            <label>অ্যাডমিন ইমেইল</label>
+            <input type="email" id="login-email" placeholder="admin@gobarishal.com" required />
+          </div>
+          <div class="form-group">
+            <label>পাসওয়ার্ড</label>
+            <input type="password" id="login-password" placeholder="••••••••" required />
+          </div>
+
+          <div class="cf-turnstile" data-sitekey="0x4AAAAAACbJ3q3aC9mL2-a5" data-theme="light" style="margin: 12px 0;"></div>
+
+          <button type="submit" id="login-btn" class="btn btn-royal btn-full">সাইন ইন করুন</button>
+          <p id="login-error" class="error-msg hidden"></p>
+        </form>
+        <div class="login-footer">
+          App Development by <a href="https://rzntechbsl.blogspot.com/" target="_blank" rel="noopener noreferrer">RZN Tech</a>
+        </div>
+      </div>
+    </div>
+  </section>
 <body>
 <!-- Go Barishal Branded Preloader -->
   <div id="gb-preloader" class="gb-preloader fade-out">
@@ -58,11 +118,9 @@
   <div id="app-shell" class="workspace hidden">
     <!-- Left Sidebar -->
     <aside id="sidebar" class="sidebar">
-      <div class="sidebar-brand">
+     <div class="sidebar-brand">
+        <img src="https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEjwOudMiwKobIHV8HL1YfCk05ap_Uj9WuryyPrvzYHCwSh6yINEfvExRkwwtVRkZjHC6tI7wqo6CgWGm6vGIlsgInkCk2alS2p4EnVPEFDK4bTjg5SueXQuike2nySn89NoEDvhrX51UDbOx_ty-5uSyug6Gkz0an2cjYdTyrNx6mROM-W_dt307u3h1aCb/s1024/logo.png.png" alt="Go Barishal" class="sidebar-logo-img" />
         <button id="sidebar-close" class="icon-btn mobile-only">✕</button>
-        <div class="brand-title">
-          <span class="brand-blue">Go</span><span class="brand-dark">Barishal</span>
-        </div>
       </div>
 
     <div class="nav-pill-group">
@@ -152,6 +210,15 @@
         <!-- 1. DASHBOARD OVERVIEW (StarAdmin Layout)   -->
         <!-- ========================================== -->
         <section id="tab-dashboard" class="tab-view active">
+          <!-- Go Barishal Branded Welcome Banner -->
+        <div class="gb-hero-strip">
+          <div class="gb-hero-strip-text">
+            <span class="gb-strip-tag">Live Operations • বরিশাল শহর</span>
+            <h3>Go Barishal রাইড শেয়ারিং কন্ট্রোল সেন্টার</h3>
+            <p>সকল লাইভ বাইক, সিএনজি ও কার রাইডার এবং যাত্রীর রিয়েল-টাইম কার্যক্রম মনিটর করুন।</p>
+          </div>
+          <img src="https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEhblDZwvhMBoY3K-UIx_9WWoMbKcuuZUwDuedS_SBRFYazG_CTiGO3GSP-W2mHuWhTthJHVTCwDXE43Sgh8N65-va8JxTWTgWXQsI3qJTj018F3dZedDjVPs-OqUsNtxZ43YgRQ-cZW2miBTGsmY6QzDqHmQwGUwhQr2H1mDnnhQJFg-vl_qdn1qqPlLW8I/s3288/Untitled%20design.png" alt="Go Barishal Steamer & Fleet" class="gb-hero-strip-img" />
+        </div>
           <!-- Sub-header Tabs & Action Buttons -->
           <div class="sub-header-bar">
             <div class="underline-tabs">
