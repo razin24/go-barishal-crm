@@ -117,6 +117,7 @@ function switchTab(tabName) {
 }
 
 function refreshCurrentTab() {
+  if (activeTab === 'promotions') loadPromotionsAndAds();
   if (activeTab === 'dashboard') loadDashboard();
   if (activeTab === 'map') initOrRefreshMap();
   if (activeTab === 'drivers') loadDrivers();
@@ -729,4 +730,147 @@ async function submitNewPassword() {
 
   showToast('পাসওয়ার্ড সফলভাবে পরিবর্তন হয়েছে!');
   closeResetModal();
+}
+// ============================================================
+// 11. PROMO CODES & APP ANNOUNCEMENTS (ADS / NOTICES)
+// ============================================================
+async function loadPromotionsAndAds() {
+  await Promise.all([loadAnnouncements(), loadPromoCodes()]);
+}
+
+async function loadAnnouncements() {
+  const { data, error } = await db
+    .from('app_announcements')
+    .select('*')
+    .order('created_at', { ascending: false });
+
+  if (error) return showToast('নোটিফিকেশন লোড ব্যর্থ: ' + error.message);
+
+  const targetLabels = {
+    passenger: 'Passenger App',
+    rider: 'Rider App',
+    both: 'Both Apps'
+  };
+
+  document.getElementById('announcements-tbody').innerHTML = (data || []).map((a) => `
+    <tr>
+      <td>
+        <span class="status-badge sb-blue">${targetLabels[a.target_app] || a.target_app}</span><br/>
+        <span class="status-badge sb-amber" style="margin-top:4px;">${a.badge_text || 'Notice'}</span>
+      </td>
+      <td>
+        <strong>${a.title}</strong><br/>
+        <span class="muted-text">${a.message}</span>
+      </td>
+      <td>
+        <label class="switch-toggle" title="Active / Pause">
+          <input type="checkbox" ${a.is_active ? 'checked' : ''} onchange="toggleAnnouncement('${a.id}', this.checked)" />
+          <span class="switch-slider"></span>
+        </label>
+      </td>
+      <td>
+        <button class="btn btn-sm btn-danger" onclick="deleteAnnouncement('${a.id}')">Delete</button>
+      </td>
+    </tr>
+  `).join('') || '<tr><td colspan="4">কোনো নোটিফিকেশন বা বিজ্ঞাপন নেই।</td></tr>';
+}
+
+document.getElementById('announcement-form').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const payload = {
+    target_app: document.getElementById('ann-target').value,
+    badge_text: document.getElementById('ann-badge').value.trim(),
+    title: document.getElementById('ann-title').value.trim(),
+    message: document.getElementById('ann-message').value.trim(),
+    is_active: true
+  };
+
+  const { error } = await db.from('app_announcements').insert(payload);
+  if (error) return showToast('পাবলিশ ব্যর্থ: ' + error.message);
+
+  showToast('নতুন নোটিফিকেশন/বিজ্ঞাপন পাবলিশ হয়েছে!');
+  document.getElementById('ann-title').value = '';
+  document.getElementById('ann-message').value = '';
+  loadAnnouncements();
+});
+
+async function toggleAnnouncement(id, isActive) {
+  const { error } = await db.from('app_announcements').update({ is_active: isActive }).eq('id', id);
+  if (error) return showToast('আপডেট ব্যর্থ হয়েছে');
+  showToast(isActive ? 'বিজ্ঞাপনটি চালু করা হয়েছে' : 'বিজ্ঞাপনটি সাময়িক বন্ধ (Paused) করা হয়েছে');
+}
+
+async function deleteAnnouncement(id) {
+  if (!confirm('আপনি কি এই বিজ্ঞাপনটি স্থায়ীভাবে মুছে ফেলতে চান?')) return;
+  const { error } = await db.from('app_announcements').delete().eq('id', id);
+  if (error) return showToast('ডিলিট ব্যর্থ হয়েছে');
+  showToast('বিজ্ঞাপনটি মুছে ফেলা হয়েছে');
+  loadAnnouncements();
+}
+
+async function loadPromoCodes() {
+  const { data, error } = await db
+    .from('promo_codes')
+    .select('*')
+    .order('created_at', { ascending: false });
+
+  if (error) return showToast('প্রোমো কোড লোড ব্যর্থ: ' + error.message);
+
+  document.getElementById('promos-tbody').innerHTML = (data || []).map((p) => {
+    const discLabel = p.discount_type === 'percent'
+      ? `${p.discount_value}% (Max ৳${p.max_discount || 0})`
+      : `Flat ৳${p.discount_value}`;
+
+    return `
+      <tr>
+        <td><span class="trx-chip">${p.code}</span></td>
+        <td><strong>${discLabel}</strong><br/><span class="muted-text">Min Fare: ৳${p.min_fare || 0}</span></td>
+        <td>
+          <label class="switch-toggle" title="Active / Inactive">
+            <input type="checkbox" ${p.is_active ? 'checked' : ''} onchange="togglePromoCode('${p.id}', this.checked)" />
+            <span class="switch-slider"></span>
+          </label>
+        </td>
+        <td>
+          <button class="btn btn-sm btn-danger" onclick="deletePromoCode('${p.id}')">Delete</button>
+        </td>
+      </tr>
+    `;
+  }).join('') || '<tr><td colspan="4">কোনো প্রোমো কোড তৈরি করা হয়নি।</td></tr>';
+}
+
+document.getElementById('promo-form').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const payload = {
+    code: document.getElementById('promo-code').value.trim().toUpperCase(),
+    discount_type: document.getElementById('promo-type').value,
+    discount_value: parseFloat(document.getElementById('promo-value').value),
+    max_discount: parseFloat(document.getElementById('promo-max').value) || 0,
+    min_fare: parseFloat(document.getElementById('promo-min').value) || 0,
+    is_active: true
+  };
+
+  if (!payload.code) return showToast('প্রোমো কোড লিখুন');
+
+  const { error } = await db.from('promo_codes').insert(payload);
+  if (error) return showToast('প্রোমো তৈরি ব্যর্থ: ' + error.message);
+
+  showToast(`প্রোমো কোড ${payload.code} তৈরি হয়েছে!`);
+  document.getElementById('promo-code').value = '';
+  document.getElementById('promo-value').value = '';
+  loadPromoCodes();
+});
+
+async function togglePromoCode(id, isActive) {
+  const { error } = await db.from('promo_codes').update({ is_active: isActive }).eq('id', id);
+  if (error) return showToast('আপডেট ব্যর্থ হয়েছে');
+  showToast(isActive ? 'প্রোমো কোড অ্যাক্টিভ করা হয়েছে' : 'প্রোমো কোড নিষ্ক্রিয় করা হয়েছে');
+}
+
+async function deletePromoCode(id) {
+  if (!confirm('আপনি কি এই প্রোমো কোডটি মুছে ফেলতে চান?')) return;
+  const { error } = await db.from('promo_codes').delete().eq('id', id);
+  if (error) return showToast('ডিলিট ব্যর্থ হয়েছে');
+  showToast('প্রোমো কোড মুছে ফেলা হয়েছে');
+  loadPromoCodes();
 }
