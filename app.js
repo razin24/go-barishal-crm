@@ -420,6 +420,7 @@ function renderDriversTable() {
             </button>
             <button class="btn btn-sm btn-royal" onclick="grantWeeklyPass('${d.id}', '${d.package_expires_at || ''}')">+7 Days</button>
             <button class="btn btn-sm btn-white" onclick="updateFreeRides('${d.id}', ${d.free_rides_left ?? 0})">Free Rides</button>
+            <button class="btn btn-sm btn-white" onclick="openResetModalForUser('${d.user_id || d.id}', '${(prof.full_name || '').replace(/'/g, '')}', 'driver', '${prof.phone || ''}')">🔑 Reset Pass</button>
           </div>
         </td>
       </tr>
