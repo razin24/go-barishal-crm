@@ -141,55 +141,47 @@
 
       <main class="main-panel">
         <header class="topbar">
+      <header class="topbar compact-topbar">
           <div class="topbar-left">
             <button id="menu-toggle" class="icon-btn mobile-only">☰</button>
             <div class="greeting-box">
-              <h1>Good Morning, <strong id="admin-name-display">Admin</strong></h1>
-              <p>Your Go Barishal fleet &amp; revenue performance summary</p>
+              <h1>Hi, <strong id="admin-name-display">Admin</strong> <span class="live-pill">Live</span></h1>
             </div>
           </div>
           <div class="topbar-right">
             <button class="btn btn-royal btn-sm" onclick="openResetModal()">
               <svg class="btn-svg" viewBox="0 0 24 24"><path d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 1 1-7.778 7.778 5.5 5.5 0 0 1 7.777-7.777zm0 0L15.5 7.5m0 0l3 3L22 7l-3-3m-3.5 3.5L19 4"/></svg>
-              Find ID / Reset Pass
+              Reset Pass
             </button>
+            <button class="btn btn-white btn-sm" onclick="window.print()">Print</button>
+            <button class="btn btn-royal btn-sm" onclick="refreshCurrentTab()">Refresh</button>
             <div class="date-chip" id="today-date-chip">--/--/2026</div>
             <button class="icon-circle-btn" title="Pending bKash Payments" onclick="switchTab('payments')">
               <svg class="nav-svg" viewBox="0 0 24 24"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
               <span id="bell-dot" class="notif-dot hidden"></span>
             </button>
-            <button class="icon-circle-btn" title="Refresh Data" onclick="refreshCurrentTab()">
-              <svg class="nav-svg" viewBox="0 0 24 24"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
-            </button>
             <div class="avatar-circle" title="Go Barishal Super Admin">GB</div>
           </div>
         </header>
 
-        <div class="sub-header-bar">
-          <div class="underline-tabs">
-            <button class="u-tab active" onclick="switchTab('dashboard')">Overview</button>
-            <button class="u-tab" onclick="switchTab('map')">Live Map</button>
-            <button class="u-tab" onclick="switchTab('payments')">bKash Approvals</button>
-            <button class="u-tab" onclick="switchTab('drivers')">Drivers</button>
-          </div>
-          <div class="header-cta-group">
-            <button class="btn btn-white btn-sm" onclick="window.print()">Print</button>
-            <button class="btn btn-royal btn-sm" onclick="refreshCurrentTab()">Refresh</button>
-          </div>
-        </div>
-
         <div class="content-body">
-          <!-- TAB 1: DASHBOARD -->
+          <!-- TAB 1: DASHBOARD (ONE-SCREEN ZERO-SCROLL VIEW) -->
           <section id="tab-dashboard" class="tab-view active">
-            <div class="gb-hero-strip">
+            <div class="gb-hero-strip compact-strip">
               <div class="gb-hero-strip-text">
-                <span class="gb-strip-tag">Live Operations • বরিশাল শহর</span>
-                <h3>Go Barishal রাইড শেয়ারিং কন্ট্রোল সেন্টার</h3>
-                <p>সকল লাইভ বাইক, সিএনজি ও কার রাইডার এবং যাত্রীর রিয়েল-টাইম কার্যক্রম মনিটর করুন।</p>
+                <h3>Go Barishal কন্ট্রোল সেন্টার <span class="gb-strip-tag">বরিশাল শহর • 0% কমিশন</span></h3>
               </div>
-              <img src="https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEhblDZwvhMBoY3K-UIx_9WWoMbKcuuZUwDuedS_SBRFYazG_CTiGO3GSP-W2mHuWhTthJHVTCwDXE43Sgh8N65-va8JxTWTgWXQsI3qJTj018F3dZedDjVPs-OqUsNtxZ43YgRQ-cZW2miBTGsmY6QzDqHmQwGUwhQr2H1mDnnhQJFg-vl_qdn1qqPlLW8I/s3288/Untitled%20design.png" alt="Go Barishal Steamer & Fleet" class="gb-hero-strip-img" />
+              <img src="https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEhblDZwvhMBoY3K-UIx_9WWoMbKcuuZUwDuedS_SBRFYazG_CTiGO3GSP-W2mHuWhTthJHVTCwDXE43Sgh8N65-va8JxTWTgWXQsI3qJTj018F3dZedDjVPs-OqUsNtxZ43YgRQ-cZW2miBTGsmY6QzDqHmQwGUwhQr2H1mDnnhQJFg-vl_qdn1qqPlLW8I/s3288/Untitled%20design.png" alt="Go Barishal Fleet" class="gb-hero-strip-img" />
             </div>
 
+            <div class="kpi-grid-6 compact-kpi">
+              <div class="metric-item"><span class="m-label">Total Rides</span><div class="m-value" id="kpi-total-rides">0</div><span class="m-sub">All-time trips</span></div>
+              <div class="metric-item"><span class="m-label">Completed</span><div class="m-value" id="kpi-completed-rides">0</div><span class="m-sub">Successful drops</span></div>
+              <div class="metric-item"><span class="m-label">Online Drivers</span><div class="m-value" id="kpi-online-drivers">0</div><span class="m-sub" id="kpi-driver-breakdown">Bike: 0 | CNG: 0 | Car: 0</span></div>
+              <div class="metric-item"><span class="m-label">Pending bKash</span><div class="m-value text-amber" id="kpi-pending-payments">0</div><span class="m-sub">Awaiting check</span></div>
+              <div class="metric-item"><span class="m-label">Pass Revenue</span><div class="m-value text-blue" id="kpi-revenue">৳0</div><span class="m-sub">৳150 weekly pass</span></div>
+              <div class="metric-item"><span class="m-label">Trip GMV</span><div class="m-value text-green" id="kpi-gmv">৳0</div><span class="m-sub">Driver earnings</span></div>
+            </div>
             <div class="kpi-grid-6">
               <div class="metric-item"><span class="m-label">Total Rides</span><div class="m-value" id="kpi-total-rides">0</div><span class="m-sub">All-time trips</span></div>
               <div class="metric-item"><span class="m-label">Completed Rides</span><div class="m-value" id="kpi-completed-rides">0</div><span class="m-sub">Successful drops</span></div>
