@@ -429,8 +429,9 @@
         <!-- 6.5. PROMO & ADS (NOTIFICATIONS & OFFERS)  -->
         <!-- ========================================== -->
         <section id="tab-promotions" class="tab-view">
-          <div class="grid-2-col">
-            <!-- Left: Send Passenger / Rider Notifications & Ads -->
+          <div class="grid-2-col promo-main-grid" style="grid-template-columns: repeat(2, minmax(0, 1fr)); align-items: start;">
+            
+            <!-- Left Card: Send Passenger / Rider Notifications & Ads -->
             <div class="sa-card">
               <div class="card-top">
                 <div>
@@ -462,8 +463,8 @@
                 <button type="submit" class="btn btn-royal btn-block">🚀 পাবলিশ করুন (Publish Notice)</button>
               </form>
 
-              <hr style="border:none; border-top:1px solid #E8ECEF; margin:20px 0;" />
-              <h4 style="margin-bottom:10px;">চলমান নোটিফিকেশন ও বিজ্ঞাপনসমূহ</h4>
+              <hr style="border:none; border-top:1px solid #E8ECEF; margin:22px 0;" />
+              <h4 style="margin-bottom:12px;">চলমান নোটিফিকেশন ও বিজ্ঞাপনসমূহ</h4>
               <div class="table-wrap">
                 <table class="sa-table">
                   <thead>
@@ -479,7 +480,7 @@
               </div>
             </div>
 
-            <!-- Right: Manage Passenger Discount Promo Codes -->
+            <!-- Right Card: Manage Passenger Discount Promo Codes -->
             <div class="sa-card">
               <div class="card-top">
                 <div>
@@ -492,7 +493,8 @@
                   <label>প্রোমো কোড (Promo Code)</label>
                   <input type="text" id="promo-code" class="sa-input" style="text-transform:uppercase; font-weight:700;" placeholder="যেমন: BARISHAL50" required />
                 </div>
-                <div class="grid-2-col" style="gap:10px;">
+
+                <div class="form-row-2">
                   <div class="form-group">
                     <label>ছাড়ের ধরন (Discount Type)</label>
                     <select id="promo-type" class="sa-select">
@@ -505,7 +507,8 @@
                     <input type="number" step="0.01" id="promo-value" class="sa-input" placeholder="যেমন: 30 বা 15" required />
                   </div>
                 </div>
-                <div class="grid-2-col" style="gap:10px;">
+
+                <div class="form-row-2">
                   <div class="form-group">
                     <label>সর্বোচ্চ ছাড় (Max Discount ৳)</label>
                     <input type="number" step="0.01" id="promo-max" class="sa-input" value="50" required />
@@ -514,7 +517,9 @@
                     <label>সর্বনিম্ন ভাড়া শর্ত (Min Fare ৳)</label>
                     <input type="number" step="0.01" id="promo-min" class="sa-input" value="60" required />
                   </div>
-                  <div class="grid-2-col" style="gap:10px;">
+                </div>
+
+                <div class="form-row-2">
                   <div class="form-group">
                     <label>প্রতি ইউজার সীমা (Max Uses/User)</label>
                     <input type="number" min="1" id="promo-max-uses" class="sa-input" value="1" required />
@@ -524,11 +529,12 @@
                     <input type="datetime-local" id="promo-expires-at" class="sa-input" />
                   </div>
                 </div>
+
                 <button type="submit" class="btn btn-success btn-block">➕ প্রোমো কোড তৈরি করুন</button>
               </form>
 
-              <hr style="border:none; border-top:1px solid #E8ECEF; margin:20px 0;" />
-              <h4 style="margin-bottom:10px;">সকল প্রোমো কোড তালিকা</h4>
+              <hr style="border:none; border-top:1px solid #E8ECEF; margin:22px 0;" />
+              <h4 style="margin-bottom:12px;">সকল প্রোমো কোড তালিকা</h4>
               <div class="table-wrap">
                 <table class="sa-table">
                   <thead>
@@ -543,6 +549,7 @@
                 </table>
               </div>
             </div>
+
           </div>
         </section>
         <!-- ========================================== -->
