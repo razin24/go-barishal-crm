@@ -1161,3 +1161,19 @@ body.initial-boot .gb-preloader {
     max-height: 110px;
   }
 }
+/* ============================================================
+   LOGIN LOGO SMOOTH FLOATING & PULSE ANIMATION
+   ============================================================ */
+.logo-float-anim {
+  animation: gbLogoFloat 2.6s ease-in-out infinite;
+  filter: drop-shadow(0 6px 14px rgba(76, 29, 149, 0.22));
+}
+
+@keyframes gbLogoFloat {
+  0%, 100% {
+    transform: translateY(0) scale(1);
+  }
+  50% {
+    transform: translateY(-5px) scale(1.04);
+  }
+}
