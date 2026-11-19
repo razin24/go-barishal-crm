@@ -295,8 +295,17 @@ async function verifyAdminSession(userId) {
 // ============================================================
 function initSidebarEvents() {
   const sidebar = document.getElementById('sidebar');
-  document.getElementById('menu-toggle').addEventListener('click', () => sidebar.classList.toggle('open'));
-  document.getElementById('sidebar-close').addEventListener('click', () => sidebar.classList.remove('open'));
+  const backdrop = document.getElementById('sidebar-backdrop');
+
+  document.getElementById('menu-toggle').addEventListener('click', () => {
+    sidebar.classList.toggle('open');
+    if (backdrop) backdrop.classList.toggle('show', sidebar.classList.contains('open'));
+  });
+
+  document.getElementById('sidebar-close').addEventListener('click', () => {
+    sidebar.classList.remove('open');
+    if (backdrop) backdrop.classList.remove('show');
+  });
 
   document.querySelectorAll('.nav-item').forEach((btn) => {
     btn.addEventListener('click', () => switchTab(btn.dataset.tab));
@@ -305,17 +314,20 @@ function initSidebarEvents() {
 
 function switchTab(tabName) {
   activeTab = tabName;
-  document.getElementById('sidebar').classList.remove('open');
+  const sidebar = document.getElementById('sidebar');
+  const backdrop = document.getElementById('sidebar-backdrop');
+  if (sidebar) sidebar.classList.remove('open');
+  if (backdrop) backdrop.classList.remove('show');
 
-  document.querySelectorAll('.nav-item').forEach((b) => {
+  document.querySelectorAll('.nav-item, .m-nav-btn').forEach((b) => {
     b.classList.toggle('active', b.dataset.tab === tabName);
   });
   document.querySelectorAll('.tab-view').forEach((v) => v.classList.remove('active'));
-  document.getElementById(`tab-${tabName}`).classList.add('active');
+  const targetTab = document.getElementById(`tab-${tabName}`);
+  if (targetTab) targetTab.classList.add('active');
 
   refreshCurrentTab();
 }
-
 async function refreshCurrentTab() {
   if (activeTab === 'promotions') await loadPromotionsAndAds();
   if (activeTab === 'dashboard') await loadDashboard();
