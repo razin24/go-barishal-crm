@@ -58,12 +58,20 @@ function hideGbLoader() {
 document.addEventListener('DOMContentLoaded', async () => {
   const dateChip = document.getElementById('today-date-chip');
   if (dateChip) dateChip.textContent = new Date().toLocaleDateString('en-GB');
+
   const { data: { session } } = await db.auth.getSession();
   if (session) {
-    await verifyAdminSession(session.user.id);
+    showGbLoader('ড্যাশবোর্ড লোড হচ্ছে...');
+    try {
+      await verifyAdminSession(session.user.id);
+    } finally {
+      hideGbLoader();
+    }
+  } else {
+    hideGbLoader();
   }
-  hideGbLoader();
 });
+
 document.getElementById('login-form').addEventListener('submit', async (e) => {
   e.preventDefault();
   const errBox = document.getElementById('login-error');
@@ -124,7 +132,13 @@ document.getElementById('login-form').addEventListener('submit', async (e) => {
 
   localStorage.removeItem('gb_failed_attempts');
   localStorage.removeItem('gb_login_lock_until');
-  await verifyAdminSession(data.user.id);
+
+  showGbLoader('অ্যাডমিন প্যানেল লোড হচ্ছে...');
+  try {
+    await verifyAdminSession(data.user.id);
+  } finally {
+    hideGbLoader();
+  }
 });
 
 async function verifyAdminSession(userId) {
@@ -155,7 +169,6 @@ document.getElementById('logout-btn').addEventListener('click', async () => {
   await db.auth.signOut();
   location.reload();
 });
-
 // ============================================================
 // 2. NAVIGATION & TAB ROUTING
 // ============================================================
