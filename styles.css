@@ -944,3 +944,31 @@ html, body {
   height: 230px !important;
   width: 100% !important;
 }
+/* ============================================================
+   STATIC SIDEBAR & CONTENT-ONLY LOADER (NO FULL-PAGE RELOAD FEEL)
+   ============================================================ */
+/* সাইডবার ও টপবার স্থির থাকবে, কেবল কন্টেন্ট এরিয়ায় লোডার দেখাবে */
+.gb-preloader {
+  position: fixed;
+  top: 0;
+  left: 250px; /* বাম পাশের সাইডবার ছেড়ে শুরু হবে */
+  right: 0;
+  bottom: 0;
+  background: rgba(244, 245, 247, 0.72);
+  backdrop-filter: blur(2px);
+  z-index: 900;
+}
+
+/* প্রথমবার লগইন করার সময় বা লগইন স্ক্রিনে পুরো স্ক্রিন জুড়ে থাকবে */
+#login-screen:not(.hidden) ~ .gb-preloader,
+body.initial-boot .gb-preloader {
+  left: 0;
+  z-index: 99999;
+  background: rgba(244, 245, 247, 0.96);
+}
+
+@media (max-width: 900px) {
+  .gb-preloader {
+    left: 0;
+  }
+}
