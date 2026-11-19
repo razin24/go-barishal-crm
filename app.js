@@ -43,11 +43,11 @@ document.getElementById('login-form').addEventListener('submit', async (e) => {
   const errBox = document.getElementById('login-error');
   const btn = document.getElementById('login-btn');
 
-  // ১. পরপর ৩ বার ভুল পাসওয়ার্ড দিলে ৫ মিনিট লগইন লক
+  // ১. পরপর ৩ বার ভুল পাসওয়ার্ড দিলে ৫ মিনিট লগইন লক
   const lockUntil = Number(localStorage.getItem('gb_login_lock_until') || 0);
   if (Date.now() < lockUntil) {
     const minsLeft = Math.ceil((lockUntil - Date.now()) / 60000);
-    errBox.textContent = `নিরাপত্তাজনিত কারণে লগইন লক করা হয়েছে। ${minsLeft} মিনিট পর আবার চেষ্টা করুন।`;
+    errBox.textContent = `নিরাপত্তাজনিত কারণে লগইন লক করা হয়েছে। ${minsLeft} মিনিট পর আবার চেষ্টা করুন।`;
     errBox.classList.remove('hidden');
     return;
   }
@@ -88,7 +88,7 @@ document.getElementById('login-form').addEventListener('submit', async (e) => {
     if (attempts >= 3) {
       localStorage.setItem('gb_login_lock_until', Date.now() + 5 * 60 * 1000);
       localStorage.setItem('gb_failed_attempts', '0');
-      errBox.textContent = 'পরপর ৩ বার ভুল পাসওয়ার্ড দেওয়ায় ৫ মিনিটের জন্য লগইন বন্ধ করা হয়েছে!';
+      errBox.textContent = 'পরপর ৩ বার ভুল পাসওয়ার্ড দেওয়ায় ৫ মিনিটের জন্য লগইন বন্ধ করা হয়েছে!';
     } else {
       errBox.textContent = `লগইন ব্যর্থ (${attempts}/3): ${error.message}`;
     }
@@ -100,6 +100,36 @@ document.getElementById('login-form').addEventListener('submit', async (e) => {
   localStorage.removeItem('gb_login_lock_until');
   await verifyAdminSession(data.user.id);
 });
+
+async function verifyAdminSession(userId) {
+  const errBox = document.getElementById('login-error');
+  const { data: profile, error } = await db
+    .from('profiles')
+    .select('role, full_name')
+    .eq('id', userId)
+    .single();
+
+  if (error || !profile || profile.role !== 'admin') {
+    await db.auth.signOut();
+    errBox.textContent = 'Access Denied: Admin privileges required';
+    errBox.classList.remove('hidden');
+    return;
+  }
+
+  document.getElementById('admin-name-display').textContent = profile.full_name || 'Admin';
+  document.getElementById('login-screen').classList.add('hidden');
+  document.getElementById('app-shell').classList.remove('hidden');
+
+  initSidebarEvents();
+  await cacheProfiles();
+  await loadDashboard();
+}
+
+document.getElementById('logout-btn').addEventListener('click', async () => {
+  await db.auth.signOut();
+  location.reload();
+});
+
 // ============================================================
 // 2. NAVIGATION & TAB ROUTING
 // ============================================================
@@ -363,7 +393,7 @@ async function refreshMapData() {
     }).bindPopup(`
       <strong>${prof.full_name || 'Rider'}</strong> (${(d.vehicle_type || '').toUpperCase()})<br/>
       ফোন: ${prof.phone || 'N/A'}<br/>
-      গাড়ি: ${d.vehicle_number || 'N/A'}<br/>
+      গাড়ি: ${d.vehicle_number || 'N/A'}<br/>
       সর্বশেষ আপডেট: ${d.last_heartbeat_at ? new Date(d.last_heartbeat_at).toLocaleTimeString() : 'N/A'}
     `).addTo(fleetLayer);
   });
@@ -383,7 +413,7 @@ async function refreshMapData() {
 async function loadDrivers() {
   await cacheProfiles();
   const { data, error } = await db.from('drivers').select('*').order('created_at', { ascending: false });
-  if (error) return showToast('ড্রাইভার লোড ব্যর্থ হয়েছে');
+  if (error) return showToast('ড্রাইভার লোড ব্যর্থ হয়েছে: ' + error.message);
   allDrivers = data || [];
   renderDriversTable();
 }
@@ -433,13 +463,13 @@ function renderDriversTable() {
         </td>
       </tr>
     `;
-  }).join('') || '<tr><td colspan="7">কোনো ড্রাইভার পাওয়া যায়নি।</td></tr>';
+  }).join('') || '<tr><td colspan="7">কোনো ড্রাইভার পাওয়া যায়নি।</td></tr>';
 }
 
 async function setDriverStatus(driverId, status) {
   const { error } = await db.from('drivers').update({ status }).eq('id', driverId);
-  if (error) return showToast('আপডেট ব্যর্থ হয়েছে');
-  showToast(`ড্রাইভার স্ট্যাটাস ${status} করা হয়েছে`);
+  if (error) return showToast('আপডেট ব্যর্থ হয়েছে');
+  showToast(`ড্রাইভার স্ট্যাটাস ${status} করা হয়েছে`);
   loadDrivers();
 }
 
@@ -447,8 +477,8 @@ async function grantWeeklyPass(driverId, currentExp) {
   const base = currentExp && new Date(currentExp) > new Date() ? new Date(currentExp) : new Date();
   base.setDate(base.getDate() + 7);
   const { error } = await db.from('drivers').update({ package_expires_at: base.toISOString(), status: 'approved' }).eq('id', driverId);
-  if (error) return showToast('প্যাকেজ যোগ করা যায়নি');
-  showToast('+৭ দিনের আনলিমিটেড পাস যুক্ত হয়েছে!');
+  if (error) return showToast('প্যাকেজ যোগ করা যায়নি');
+  showToast('+৭ দিনের আনলিমিটেড পাস যুক্ত হয়েছে!');
   loadDrivers();
 }
 
@@ -456,8 +486,8 @@ async function updateFreeRides(driverId, current) {
   const val = prompt('নতুন ফ্রি রাইড সংখ্যা দিন:', current);
   if (val === null || isNaN(val)) return;
   const { error } = await db.from('drivers').update({ free_rides_left: parseInt(val, 10) }).eq('id', driverId);
-  if (error) return showToast('আপডেট ব্যর্থ হয়েছে');
-  showToast('ফ্রি রাইড আপডেট হয়েছে');
+  if (error) return showToast('আপডেট ব্যর্থ হয়েছে');
+  showToast('ফ্রি রাইড আপডেট হয়েছে');
   loadDrivers();
 }
 
@@ -506,7 +536,7 @@ async function loadPayments() {
 
 function copyTrx(trx) {
   navigator.clipboard.writeText(trx);
-  showToast('TrxID কপি হয়েছে: ' + trx);
+  showToast('TrxID কপি হয়েছে: ' + trx);
 }
 
 async function approvePaymentRpc(paymentId, decision) {
@@ -519,7 +549,7 @@ async function approvePaymentRpc(paymentId, decision) {
   if (error || (data && data.success === false)) {
     return showToast('ত্রুটি: ' + (error?.message || data?.message));
   }
-  showToast(`পেমেন্ট ${decision} হয়েছে!`);
+  showToast(`পেমেন্ট ${decision} হয়েছে!`);
   loadPayments();
   loadDashboard();
 }
@@ -560,7 +590,7 @@ async function loadRides() {
         </td>
       </tr>
     `;
-  }).join('') || '<tr><td colspan="7">কোনো রাইড পাওয়া যায়নি।</td></tr>';
+  }).join('') || '<tr><td colspan="7">কোনো রাইড পাওয়া যায়নি।</td></tr>';
 }
 
 async function forceRideStatus(rideId, driverId, newStatus) {
@@ -571,7 +601,7 @@ async function forceRideStatus(rideId, driverId, newStatus) {
 
   await db.from('rides').update(payload).eq('id', rideId);
   if (driverId) await db.from('drivers').update({ active_ride_id: null }).eq('id', driverId);
-  showToast(`রাইড ${newStatus} করা হয়েছে`);
+  showToast(`রাইড ${newStatus} করা হয়েছে`);
   loadRides();
 }
 
@@ -606,7 +636,7 @@ async function loadPassengersAndReports() {
         </button>
       </td>
     </tr>
-  `).join('') || '<tr><td colspan="4">কোনো যাত্রী পাওয়া যায়নি।</td></tr>';
+  `).join('') || '<tr><td colspan="4">কোনো যাত্রী পাওয়া যায়নি।</td></tr>';
 
   document.getElementById('reports-tbody').innerHTML = (repRes.data || []).map((rep) => `
     <tr>
@@ -624,7 +654,7 @@ async function loadPassengersAndReports() {
 // ============================================================
 async function loadSettings() {
   const { data, error } = await db.from('public_settings').select('*').eq('id', 1).single();
-  if (error || !data) return showToast('সেটিংস লোড ব্যর্থ হয়েছে: ' + (error?.message || ''));
+  if (error || !data) return showToast('সেটিংস লোড ব্যর্থ হয়েছে: ' + (error?.message || ''));
 
   document.getElementById('set-bike-base').value = data.bike_base_fare ?? 25;
   document.getElementById('set-bike-km').value = data.bike_per_km ?? 10;
@@ -664,7 +694,7 @@ document.getElementById('settings-form').addEventListener('submit', async (e) =>
 
   const { error } = await db.from('public_settings').upsert(payload);
   if (error) return showToast('সেভ ব্যর্থ: ' + error.message);
-  showToast('ভাড়া ও বিকাশ নম্বর সফলভাবে সেভ হয়েছে!');
+  showToast('ভাড়া ও বিকাশ নম্বর সফলভাবে সেভ হয়েছে!');
 });
 
 // ============================================================
@@ -701,7 +731,7 @@ async function findUserByPhone(prefillPhone) {
 
   const { data, error } = await sb.rpc('admin_find_user_by_phone', { p_phone });
   if (error || !data) {
-    return showToast('ইউজার পাওয়া যায়নি: ' + (error?.message || 'Not found'));
+    return showToast('ইউজার পাওয়া যায়নি: ' + (error?.message || 'Not found'));
   }
 
   const user = Array.isArray(data) ? data[0] : data;
@@ -719,7 +749,7 @@ async function findUserByPhone(prefillPhone) {
 function copyResetEmail() {
   const email = document.getElementById('reset-user-email').textContent;
   navigator.clipboard.writeText(email);
-  showToast('Login Email কপি হয়েছে: ' + email);
+  showToast('Login Email কপি হয়েছে: ' + email);
 }
 
 async function submitNewPassword() {
@@ -727,7 +757,7 @@ async function submitNewPassword() {
   const p_new_password = document.getElementById('reset-new-pass').value.trim();
 
   if (!p_user_id) return showToast('আগে ইউজার নির্বাচন করুন');
-  if (p_new_password.length < 6) return showToast('পাসওয়ার্ড কমপক্ষে ৬ অক্ষরের হতে হবে');
+  if (p_new_password.length < 6) return showToast('পাসওয়ার্ড কমপক্ষে ৬ অক্ষরের হতে হবে');
 
   const { data, error } = await sb.rpc('admin_reset_user_password', {
     p_user_id,
@@ -735,12 +765,13 @@ async function submitNewPassword() {
   });
 
   if (error || (data && data.success === false)) {
-    return showToast('পাসওয়ার্ড আপডেট ব্যর্থ: ' + (error?.message || data?.message));
+    return showToast('পাসওয়ার্ড আপডেট ব্যর্থ: ' + (error?.message || data?.message));
   }
 
-  showToast('পাসওয়ার্ড সফলভাবে পরিবর্তন হয়েছে!');
+  showToast('পাসওয়ার্ড সফলভাবে পরিবর্তন হয়েছে!');
   closeResetModal();
 }
+
 // ============================================================
 // 11. PROMO CODES & APP ANNOUNCEMENTS (ADS / NOTICES)
 // ============================================================
@@ -798,7 +829,7 @@ document.getElementById('announcement-form').addEventListener('submit', async (e
   const { error } = await db.from('app_announcements').insert(payload);
   if (error) return showToast('পাবলিশ ব্যর্থ: ' + error.message);
 
-  showToast('নতুন নোটিফিকেশন/বিজ্ঞাপন পাবলিশ হয়েছে!');
+  showToast('নতুন নোটিফিকেশন/বিজ্ঞাপন পাবলিশ হয়েছে!');
   document.getElementById('ann-title').value = '';
   document.getElementById('ann-message').value = '';
   loadAnnouncements();
@@ -806,15 +837,15 @@ document.getElementById('announcement-form').addEventListener('submit', async (e
 
 async function toggleAnnouncement(id, isActive) {
   const { error } = await db.from('app_announcements').update({ is_active: isActive }).eq('id', id);
-  if (error) return showToast('আপডেট ব্যর্থ হয়েছে');
-  showToast(isActive ? 'বিজ্ঞাপনটি চালু করা হয়েছে' : 'বিজ্ঞাপনটি সাময়িক বন্ধ (Paused) করা হয়েছে');
+  if (error) return showToast('আপডেট ব্যর্থ হয়েছে');
+  showToast(isActive ? 'বিজ্ঞাপনটি চালু করা হয়েছে' : 'বিজ্ঞাপনটি সাময়িক বন্ধ (Paused) করা হয়েছে');
 }
 
 async function deleteAnnouncement(id) {
-  if (!confirm('আপনি কি এই বিজ্ঞাপনটি স্থায়ীভাবে মুছে ফেলতে চান?')) return;
+  if (!confirm('আপনি কি এই বিজ্ঞাপনটি স্থায়ীভাবে মুছে ফেলতে চান?')) return;
   const { error } = await db.from('app_announcements').delete().eq('id', id);
-  if (error) return showToast('ডিলিট ব্যর্থ হয়েছে');
-  showToast('বিজ্ঞাপনটি মুছে ফেলা হয়েছে');
+  if (error) return showToast('ডিলিট ব্যর্থ হয়েছে');
+  showToast('বিজ্ঞাপনটি মুছে ফেলা হয়েছে');
   loadAnnouncements();
 }
 
@@ -858,7 +889,7 @@ async function loadPromoCodes() {
         </td>
       </tr>
     `;
-  }).join('') || '<tr><td colspan="4">কোনো প্রোমো কোড তৈরি করা হয়নি।</td></tr>';
+  }).join('') || '<tr><td colspan="4">কোনো প্রোমো কোড তৈরি করা হয়নি।</td></tr>';
 }
 
 document.getElementById('promo-form').addEventListener('submit', async (e) => {
@@ -880,23 +911,24 @@ document.getElementById('promo-form').addEventListener('submit', async (e) => {
   const { error } = await db.from('promo_codes').insert(payload);
   if (error) return showToast('প্রোমো তৈরি ব্যর্থ: ' + error.message);
 
-  showToast(`প্রোমো কোড ${payload.code} তৈরি হয়েছে!`);
+  showToast(`প্রোমো কোড ${payload.code} তৈরি হয়েছে!`);
   document.getElementById('promo-code').value = '';
   document.getElementById('promo-value').value = '';
   document.getElementById('promo-max-uses').value = '1';
   document.getElementById('promo-expires-at').value = '';
   loadPromoCodes();
 });
+
 async function togglePromoCode(id, isActive) {
   const { error } = await db.from('promo_codes').update({ is_active: isActive }).eq('id', id);
-  if (error) return showToast('আপডেট ব্যর্থ হয়েছে');
-  showToast(isActive ? 'প্রোমো কোড অ্যাক্টিভ করা হয়েছে' : 'প্রোমো কোড নিষ্ক্রিয় করা হয়েছে');
+  if (error) return showToast('আপডেট ব্যর্থ হয়েছে');
+  showToast(isActive ? 'প্রোমো কোড অ্যাক্টিভ করা হয়েছে' : 'প্রোমো কোড নিষ্ক্রিয় করা হয়েছে');
 }
 
 async function deletePromoCode(id) {
   if (!confirm('আপনি কি এই প্রোমো কোডটি মুছে ফেলতে চান?')) return;
   const { error } = await db.from('promo_codes').delete().eq('id', id);
-  if (error) return showToast('ডিলিট ব্যর্থ হয়েছে');
-  showToast('প্রোমো কোড মুছে ফেলা হয়েছে');
+  if (error) return showToast('ডিলিট ব্যর্থ হয়েছে');
+  showToast('প্রোমো কোড মুছে ফেলা হয়েছে');
   loadPromoCodes();
 }
