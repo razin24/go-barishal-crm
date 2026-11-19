@@ -1011,3 +1011,12 @@ body.initial-boot .gb-preloader {
     max-height: 135px !important;
   }
 }
+/* ============================================================
+   FIX FULL-WIDTH CONTENT BODY & TAB ALIGNMENT
+   ============================================================ */
+.main-panel,
+.content-body,
+.tab-view.active {
+  width: 100% !important;
+  max-width: 100% !important;
+}
