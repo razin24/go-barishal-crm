@@ -783,3 +783,101 @@ body {
 .crm-footer {
   margin-top: auto;
 }
+/* ============================================================
+   ONE-SCREEN LOCKED LAYOUT & ZERO-JANK SMOOTHING
+   ============================================================ */
+html, body {
+  height: 100%;
+  overflow: hidden; /* পুরো ব্রাউজার পেজ লাফানো বন্ধ করবে */
+}
+
+.app-shell {
+  display: flex;
+  height: 100vh;
+  overflow: hidden;
+}
+
+/* বাম পাশের সাইডবার ফিক্সড ও লগআউট বাটন সবসময় দৃশ্যমান */
+.sidebar {
+  height: 100vh;
+  max-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  overflow: hidden;
+  flex-shrink: 0;
+}
+
+.sidebar-scroll {
+  flex: 1;
+  overflow-y: auto;
+  padding-bottom: 8px;
+  scrollbar-width: thin;
+}
+
+/* মেনু আইটেমগুলো একটু কমপ্যাক্ট করা যাতে ১ স্ক্রিনে সুন্দরভাবে ধরে */
+.nav-item {
+  padding: 8px 12px !important;
+  margin-bottom: 2px !important;
+  font-size: 13.5px !important;
+}
+
+.nav-section-label {
+  margin: 10px 0 4px !important;
+  font-size: 10.5px !important;
+}
+
+.sidebar-bottom {
+  flex-shrink: 0;
+  padding: 10px 14px 12px !important;
+  background: #FFFFFF;
+  border-top: 1px solid var(--border-light);
+}
+
+/* ডান পাশের মেইন প্যানেল আলাদাভাবে স্মুথ স্ক্রল করবে */
+.main-panel {
+  flex: 1;
+  height: 100vh;
+  overflow-y: auto;
+  overflow-x: hidden;
+  scroll-behavior: smooth;
+  display: flex;
+  flex-direction: column;
+}
+
+.content-body {
+  flex: 1;
+  padding-bottom: 32px;
+}
+
+/* ডাটা আসার আগে টেবিল ও কার্ডের উচ্চতা ধরে রাখা (বাড়ি মারা বন্ধ করবে) */
+.table-card, .chart-card {
+  min-height: 220px;
+  transition: box-shadow 0.25s ease, transform 0.25s ease;
+}
+
+.tab-view.active {
+  animation: smoothReveal 0.28s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes smoothReveal {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* মোবাইল স্ক্রিনে স্বাভাবিক স্ক্রল বজায় রাখা */
+@media (max-width: 900px) {
+  html, body, .app-shell, .main-panel {
+    height: auto;
+    overflow: visible;
+  }
+  .sidebar {
+    height: 100dvh;
+  }
+}
