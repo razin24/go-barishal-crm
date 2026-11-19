@@ -1,17 +1,17 @@
 <!DOCTYPE html>
 <html lang="bn">
-<head> 
-  <script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
+<head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Go Barishal — Admin CRM</title>
-  <!-- Google Fonts: Plus Jakarta Sans & Hind Siliguri -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet" />
-  <!-- Leaflet Map CSS -->
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-  <!-- Custom StarAdmin Theme CSS -->
-  <link rel="stylesheet" href="styles.css" />
+  <link rel="stylesheet" href="styles.css?v=8" />
+  <script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
 </head>
+<body>
   <div id="toast-container"></div>
 
   <!-- Go Barishal Branded Preloader -->
@@ -20,9 +20,7 @@
       <div class="gb-pulse-logo">
         <img src="https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEjwOudMiwKobIHV8HL1YfCk05ap_Uj9WuryyPrvzYHCwSh6yINEfvExRkwwtVRkZjHC6tI7wqo6CgWGm6vGIlsgInkCk2alS2p4EnVPEFDK4bTjg5SueXQuike2nySn89NoEDvhrX51UDbOx_ty-5uSyug6Gkz0an2cjYdTyrNx6mROM-W_dt307u3h1aCb/s1024/logo.png.png" alt="Go Barishal" class="gb-loader-img" />
       </div>
-      <div class="gb-progress-bar">
-        <div class="gb-progress-fill"></div>
-      </div>
+      <div class="gb-progress-bar"><div class="gb-progress-fill"></div></div>
       <p class="gb-loader-text">ডেটা লোড হচ্ছে, অনুগ্রহ করে অপেক্ষা করুন...</p>
     </div>
   </div>
@@ -32,7 +30,6 @@
        ========================================================= -->
   <section id="login-screen" class="login-wrapper">
     <div class="login-split-card">
-      <!-- Left Brand Showcase -->
       <div class="login-brand-side">
         <div class="login-hero-badge">বরিশালের ১ নম্বর রাইড শেয়ারিং নেটওয়ার্ক</div>
         <h2>Go Barishal<br/><span>Operations &amp; Fleet Console</span></h2>
@@ -42,14 +39,14 @@
         </div>
       </div>
 
-      <!-- Right Admin Login Form -->
       <div class="login-form-side">
         <div class="login-header">
           <img src="https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEjwOudMiwKobIHV8HL1YfCk05ap_Uj9WuryyPrvzYHCwSh6yINEfvExRkwwtVRkZjHC6tI7wqo6CgWGm6vGIlsgInkCk2alS2p4EnVPEFDK4bTjg5SueXQuike2nySn89NoEDvhrX51UDbOx_ty-5uSyug6Gkz0an2cjYdTyrNx6mROM-W_dt307u3h1aCb/s1024/logo.png.png" alt="Go Barishal Logo" class="crm-brand-logo logo-float-anim" />
           <h1>Admin Sign In</h1>
           <p>সুপার অ্যাডমিন অ্যাকাউন্ট দিয়ে লগইন করুন</p>
         </div>
-        <form id="login-form">
+
+        <form id="login-form" action="javascript:void(0);">
           <input type="text" id="bot-trap" name="website_url" tabindex="-1" autocomplete="off" style="position:absolute;left:-9999px;opacity:0;" />
 
           <div class="form-group">
@@ -66,366 +63,251 @@
           <button type="submit" id="login-btn" class="btn btn-royal btn-full">সাইন ইন করুন</button>
           <p id="login-error" class="error-msg hidden"></p>
         </form>
+
         <div class="login-footer">
           App Development by <a href="https://rzntechbsl.blogspot.com/" target="_blank" rel="noopener noreferrer">RZN Tech</a>
         </div>
       </div>
     </div>
   </section>
-<body>
-<!-- Go Barishal Branded Preloader -->
-  <div id="gb-preloader" class="gb-preloader fade-out">
-    <div class="gb-loader-card">
-      <div class="gb-pulse-logo">
-        <span class="gb-mark">GB</span>
-        <span class="gb-word">Go<strong>Barishal</strong></span>
-      </div>
-      <div class="gb-progress-bar">
-        <div class="gb-progress-fill"></div>
-      </div>
-      <p class="gb-loader-text">ডেটা লোড হচ্ছে, অনুগ্রহ করে অপেক্ষা করুন...</p>
-    </div>
-  </div>
-  <!-- Toast Notification -->
-  <div id="toast-container"></div>
 
-  <!-- Admin Login Overlay -->
-  <div id="login-screen" class="login-wrapper">
-    <div class="login-card">
-      <div class="login-logo">
-        <span class="logo-mark">GB</span>
-        <span class="logo-text">Go<strong>Barishal</strong></span>
-      </div>
-      <h2>অ্যাডমিন প্যানেল লগইন</h2>
-      <p class="subtitle">শুধুমাত্র অনুমোদিত অ্যাডমিন অ্যাকাউন্ট দিয়ে প্রবেশ করুন</p>
-      <form id="login-form">
-        <div class="form-group">
-          <label for="login-email">অ্যাডমিন ইমেইল</label>
-          <input type="email" id="login-email" placeholder="admin@gobarishal.com" required />
+  <!-- Secure Mount Container (Empty until Admin Auth succeeds) -->
+  <div id="secure-app-mount"></div>
+
+  <!-- =========================================================
+       PROTECTED ADMIN DASHBOARD TEMPLATE (Cannot be opened via Console)
+       ========================================================= -->
+  <template id="admin-crm-template">
+    <div id="app-shell" class="app-shell">
+      <aside id="sidebar" class="sidebar">
+        <div class="sidebar-brand">
+          <img src="https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEjwOudMiwKobIHV8HL1YfCk05ap_Uj9WuryyPrvzYHCwSh6yINEfvExRkwwtVRkZjHC6tI7wqo6CgWGm6vGIlsgInkCk2alS2p4EnVPEFDK4bTjg5SueXQuike2nySn89NoEDvhrX51UDbOx_ty-5uSyug6Gkz0an2cjYdTyrNx6mROM-W_dt307u3h1aCb/s1024/logo.png.png" alt="Go Barishal" class="sidebar-logo-img" />
+          <button id="sidebar-close" class="icon-btn mobile-only">✕</button>
         </div>
-        <div class="form-group">
-          <label for="login-password">পাসওয়ার্ড</label>
-          <input type="password" id="login-password" placeholder="••••••••" required />
+
+        <div class="sidebar-scroll">
+          <div class="nav-pill-group">
+            <button class="nav-item active" data-tab="dashboard">
+              <svg class="nav-svg" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/></svg>
+              <span>Dashboard</span>
+            </button>
+            <ul class="sub-nav-list">
+              <li class="sub-nav active-dot" onclick="switchTab('dashboard')">Overview &amp; KPI</li>
+              <li class="sub-nav" onclick="switchTab('map')">Live Fleet Map</li>
+            </ul>
+          </div>
+
+          <div class="nav-section-label">OPERATIONS</div>
+          <button class="nav-item" data-tab="map">
+            <svg class="nav-svg" viewBox="0 0 24 24"><polygon points="1 6 1 22 8 18 16 22 23 18 23 2 16 6 8 2 1 6"/><line x1="8" y1="2" x2="8" y2="18"/><line x1="16" y1="6" x2="16" y2="22"/></svg>
+            <span>লাইভ ম্যাপ (Fleet)</span>
+          </button>
+          <button class="nav-item" data-tab="rides">
+            <svg class="nav-svg" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polygon points="16.24 7.76 14.12 14.12 7.76 16.24 9.88 9.88 16.24 7.76"/></svg>
+            <span>রাইড মনিটর (Rides)</span>
+          </button>
+          <button class="nav-item" data-tab="payments">
+            <svg class="nav-svg" viewBox="0 0 24 24"><rect x="1" y="4" width="22" height="16" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>
+            <span>বিকাশ পেমেন্ট</span>
+            <span id="pending-badge" class="badge-pill hidden">0</span>
+          </button>
+
+          <div class="nav-section-label">CRM &amp; USERS</div>
+          <button class="nav-item" data-tab="drivers">
+            <svg class="nav-svg" viewBox="0 0 24 24"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8.5" cy="7" r="4"/><polyline points="17 11 19 13 23 9"/></svg>
+            <span>ড্রাইভার ম্যানেজমেন্ট</span>
+          </button>
+          <button class="nav-item" data-tab="passengers">
+            <svg class="nav-svg" viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+            <span>যাত্রী ও রিপোর্ট</span>
+          </button>
+          <button class="nav-item" data-tab="promotions">
+            <svg class="nav-svg" viewBox="0 0 24 24"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/><line x1="7" y1="7" x2="7.01" y2="7"/></svg>
+            <span>নোটিফিকেশন ও অফার</span>
+          </button>
+
+          <div class="nav-section-label">SYSTEM</div>
+          <button class="nav-item" data-tab="settings">
+            <svg class="nav-svg" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+            <span>ভাড়া ও অ্যাপ সেটিংস</span>
+          </button>
         </div>
-        <div class="cf-turnstile" data-sitekey="0x4AAAAAAGJRpv5I1grfmQUd" style="margin-bottom: 12px;"></div>
-        <button type="submit" id="login-btn" class="btn btn-royal btn-block">সাইন ইন করুন</button>
-      </form>
-      <div id="login-error" class="error-box hidden"></div>
-    </div>
-  </div>
 
-  <!-- Main StarAdmin Workspace -->
-  <div id="app-shell" class="workspace hidden">
-    <!-- Left Sidebar -->
-    <aside id="sidebar" class="sidebar">
-     <div class="sidebar-brand">
-        <img src="https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEjwOudMiwKobIHV8HL1YfCk05ap_Uj9WuryyPrvzYHCwSh6yINEfvExRkwwtVRkZjHC6tI7wqo6CgWGm6vGIlsgInkCk2alS2p4EnVPEFDK4bTjg5SueXQuike2nySn89NoEDvhrX51UDbOx_ty-5uSyug6Gkz0an2cjYdTyrNx6mROM-W_dt307u3h1aCb/s1024/logo.png.png" alt="Go Barishal" class="sidebar-logo-img" />
-        <button id="sidebar-close" class="icon-btn mobile-only">✕</button>
-      </div>
+        <div class="sidebar-bottom">
+          <button id="logout-btn" class="btn btn-outline-danger btn-block btn-logout">লগআউট (Sign Out)</button>
+          <div class="credit-text">App Development by <a href="https://rzntechbsl.blogspot.com/" target="_blank" rel="noopener noreferrer">RZN Tech</a></div>
+        </div>
+      </aside>
 
-    <div class="nav-pill-group">
-      <button class="nav-item active" data-tab="dashboard">
-        <svg class="nav-svg" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/></svg>
-        <span>Dashboard</span>
-      </button>
-      <ul class="sub-nav-list">
-        <li class="sub-nav active-dot" onclick="switchTab('dashboard')">Overview &amp; KPI</li>
-        <li class="sub-nav" onclick="switchTab('map')">Live Fleet Map</li>
-      </ul>
-    </div>
+      <main class="main-panel">
+        <header class="topbar">
+          <div class="topbar-left">
+            <button id="menu-toggle" class="icon-btn mobile-only">☰</button>
+            <div class="greeting-box">
+              <h1>Good Morning, <strong id="admin-name-display">Admin</strong></h1>
+              <p>Your Go Barishal fleet &amp; revenue performance summary</p>
+            </div>
+          </div>
+          <div class="topbar-right">
+            <button class="btn btn-royal btn-sm" onclick="openResetModal()">
+              <svg class="btn-svg" viewBox="0 0 24 24"><path d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 1 1-7.778 7.778 5.5 5.5 0 0 1 7.777-7.777zm0 0L15.5 7.5m0 0l3 3L22 7l-3-3m-3.5 3.5L19 4"/></svg>
+              Find ID / Reset Pass
+            </button>
+            <div class="date-chip" id="today-date-chip">--/--/2026</div>
+            <button class="icon-circle-btn" title="Pending bKash Payments" onclick="switchTab('payments')">
+              <svg class="nav-svg" viewBox="0 0 24 24"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+              <span id="bell-dot" class="notif-dot hidden"></span>
+            </button>
+            <button class="icon-circle-btn" title="Refresh Data" onclick="refreshCurrentTab()">
+              <svg class="nav-svg" viewBox="0 0 24 24"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
+            </button>
+            <div class="avatar-circle" title="Go Barishal Super Admin">GB</div>
+          </div>
+        </header>
 
-    <div class="nav-section-label">OPERATIONS</div>
-    <button class="nav-item" data-tab="map">
-      <svg class="nav-svg" viewBox="0 0 24 24"><polygon points="1 6 1 22 8 18 16 22 23 18 23 2 16 6 8 2 1 6"/><line x1="8" y1="2" x2="8" y2="18"/><line x1="16" y1="6" x2="16" y2="22"/></svg>
-      <span>লাইভ ম্যাপ (Fleet)</span>
-    </button>
-    <button class="nav-item" data-tab="rides">
-      <svg class="nav-svg" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polygon points="16.24 7.76 14.12 14.12 7.76 16.24 9.88 9.88 16.24 7.76"/></svg>
-      <span>রাইড মনিটর (Rides)</span>
-    </button>
-    <button class="nav-item" data-tab="payments">
-      <svg class="nav-svg" viewBox="0 0 24 24"><rect x="1" y="4" width="22" height="16" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>
-      <span>বিকাশ পেমেন্ট</span>
-      <span id="pending-badge" class="badge-pill hidden">0</span>
-    </button>
-
-    <div class="nav-section-label">CRM &amp; USERS</div>
-    <button class="nav-item" data-tab="drivers">
-      <svg class="nav-svg" viewBox="0 0 24 24"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8.5" cy="7" r="4"/><polyline points="17 11 19 13 23 9"/></svg>
-      <span>ড্রাইভার ম্যানেজমেন্ট</span>
-    </button>
-    <button class="nav-item" data-tab="passengers">
-      <svg class="nav-svg" viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
-      <span>যাত্রী ও রিপোর্ট</span>
-    </button>
-    <button class="nav-item" data-tab="promotions">
-      <svg class="nav-svg" viewBox="0 0 24 24"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/><line x1="7" y1="7" x2="7.01" y2="7"/></svg>
-      <span>নোটিফিকেশন ও অফার</span>
-    </button>
-
-    <div class="nav-section-label">SYSTEM</div>
-    <button class="nav-item" data-tab="settings">
-      <svg class="nav-svg" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
-      <span>ভাড়া ও অ্যাপ সেটিংস</span>
-    </button>
-      <div class="sidebar-bottom">
-        <button id="logout-btn" class="btn btn-outline-danger btn-block btn-sm">লগআউট (Sign Out)</button>
-        <p class="credit-text">
-          App Development by <a href="https://rzntechbsl.blogspot.com/" target="_blank" rel="noopener noreferrer">RZN Tech</a>
-        </p>
-      </div>
-    </aside>
-
-    <!-- Main Right Area -->
-    <div class="main-panel">
-      <!-- Top Header Bar -->
-      <header class="topbar">
-        <div class="topbar-left">
-          <button id="menu-toggle" class="icon-btn">☰</button>
-          <div class="greeting-box">
-            <h1>Good Morning, <strong id="admin-name-display">Admin</strong></h1>
-            <p>Your Go Barishal fleet &amp; revenue performance summary</p>
+        <div class="sub-header-bar">
+          <div class="underline-tabs">
+            <button class="u-tab active" onclick="switchTab('dashboard')">Overview</button>
+            <button class="u-tab" onclick="switchTab('map')">Live Map</button>
+            <button class="u-tab" onclick="switchTab('payments')">bKash Approvals</button>
+            <button class="u-tab" onclick="switchTab('drivers')">Drivers</button>
+          </div>
+          <div class="header-cta-group">
+            <button class="btn btn-white btn-sm" onclick="window.print()">Print</button>
+            <button class="btn btn-royal btn-sm" onclick="refreshCurrentTab()">Refresh</button>
           </div>
         </div>
 
-       <div class="topbar-right">
-      <button class="btn btn-royal btn-sm" onclick="openResetModal()">
-        <svg class="btn-svg" viewBox="0 0 24 24"><path d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 1 1-7.778 7.778 5.5 5.5 0 0 1 7.777-7.777zm0 0L15.5 7.5m0 0l3 3L22 7l-3-3m-3.5 3.5L19 4"/></svg>
-        Find ID / Reset Pass
-      </button>
-      <div class="date-chip" id="today-date-chip">--/--/2026</div>
-      <button class="icon-circle-btn" title="Pending bKash Payments" onclick="switchTab('payments')">
-        <svg class="nav-svg" viewBox="0 0 24 24"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
-        <span id="bell-dot" class="notif-dot hidden"></span>
-      </button>
-     <button class="floating-gear-btn" title="Fare & App Settings" onclick="switchTab('settings')">
-  <svg class="nav-svg" style="width:20px;height:20px;" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
-</button>
-      </header>
-
-      <!-- Content Wrapper -->
-      <main class="content-body">
-
-        <!-- ========================================== -->
-        <!-- 1. DASHBOARD OVERVIEW (StarAdmin Layout)   -->
-        <!-- ========================================== -->
-        <section id="tab-dashboard" class="tab-view active">
-          <!-- Go Barishal Branded Welcome Banner -->
-        <div class="gb-hero-strip">
-          <div class="gb-hero-strip-text">
-            <span class="gb-strip-tag">Live Operations • বরিশাল শহর</span>
-            <h3>Go Barishal রাইড শেয়ারিং কন্ট্রোল সেন্টার</h3>
-            <p>সকল লাইভ বাইক, সিএনজি ও কার রাইডার এবং যাত্রীর রিয়েল-টাইম কার্যক্রম মনিটর করুন।</p>
-          </div>
-          <img src="https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEhblDZwvhMBoY3K-UIx_9WWoMbKcuuZUwDuedS_SBRFYazG_CTiGO3GSP-W2mHuWhTthJHVTCwDXE43Sgh8N65-va8JxTWTgWXQsI3qJTj018F3dZedDjVPs-OqUsNtxZ43YgRQ-cZW2miBTGsmY6QzDqHmQwGUwhQr2H1mDnnhQJFg-vl_qdn1qqPlLW8I/s3288/Untitled%20design.png" alt="Go Barishal Steamer & Fleet" class="gb-hero-strip-img" />
-        </div>
-          <!-- Sub-header Tabs & Action Buttons -->
-          <div class="sub-header-bar">
-            <div class="underline-tabs">
-              <button class="u-tab active" onclick="switchTab('dashboard')">Overview</button>
-              <button class="u-tab" onclick="switchTab('map')">Live Map</button>
-              <button class="u-tab" onclick="switchTab('payments')">bKash Approvals</button>
-              <button class="u-tab" onclick="switchTab('drivers')">Drivers</button>
-            </div>
-            <div class="header-cta-group">
-              <button class="btn btn-white btn-sm" onclick="window.print()">🖨️ Print</button>
-              <button class="btn btn-royal btn-sm" onclick="loadDashboard()">↻ Refresh</button>
-            </div>
-          </div>
-
-          <!-- 6-Column Clean Metric Strip (StarAdmin Style) -->
-          <div class="metrics-strip">
-            <div class="metric-item">
-              <span class="m-label">Total Rides</span>
-              <h2 class="m-value" id="kpi-total-rides">0</h2>
-              <span class="m-sub text-blue">All-time trips</span>
-            </div>
-            <div class="metric-item">
-              <span class="m-label">Completed Rides</span>
-              <h2 class="m-value" id="kpi-completed-rides">0</h2>
-              <span class="m-sub text-green">Successful drops</span>
-            </div>
-            <div class="metric-item">
-              <span class="m-label">Online Drivers</span>
-              <h2 class="m-value" id="kpi-online-drivers">0</h2>
-              <span class="m-sub" id="kpi-driver-breakdown">Bike: 0 | CNG: 0 | Car: 0</span>
-            </div>
-            <div class="metric-item">
-              <span class="m-label">Pending bKash</span>
-              <h2 class="m-value text-amber" id="kpi-pending-payments">0</h2>
-              <span class="m-sub">Awaiting TrxID check</span>
-            </div>
-            <div class="metric-item">
-              <span class="m-label">Pass Revenue</span>
-              <h2 class="m-value" id="kpi-revenue">৳0</h2>
-              <span class="m-sub text-green">Approved ৳150 passes</span>
-            </div>
-            <div class="metric-item">
-              <span class="m-label">Trip GMV (Cash)</span>
-              <h2 class="m-value" id="kpi-gmv">৳0</h2>
-              <span class="m-sub">Driver direct earnings</span>
-            </div>
-          </div>
-
-          <!-- Middle Row: Bar Chart + Doughnut Chart -->
-          <div class="grid-2-col">
-            <div class="sa-card">
-              <div class="card-top">
-                <h3>Rides Analytics (Last 7 Days)</h3>
-                <span class="pill-tag">Weekly View</span>
+        <div class="content-body">
+          <!-- TAB 1: DASHBOARD -->
+          <section id="tab-dashboard" class="tab-view active">
+            <div class="gb-hero-strip">
+              <div class="gb-hero-strip-text">
+                <span class="gb-strip-tag">Live Operations • বরিশাল শহর</span>
+                <h3>Go Barishal রাইড শেয়ারিং কন্ট্রোল সেন্টার</h3>
+                <p>সকল লাইভ বাইক, সিএনজি ও কার রাইডার এবং যাত্রীর রিয়েল-টাইম কার্যক্রম মনিটর করুন।</p>
               </div>
-              <div class="chart-wrapper">
-                <canvas id="ridesBarChart"></canvas>
-              </div>
+              <img src="https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEhblDZwvhMBoY3K-UIx_9WWoMbKcuuZUwDuedS_SBRFYazG_CTiGO3GSP-W2mHuWhTthJHVTCwDXE43Sgh8N65-va8JxTWTgWXQsI3qJTj018F3dZedDjVPs-OqUsNtxZ43YgRQ-cZW2miBTGsmY6QzDqHmQwGUwhQr2H1mDnnhQJFg-vl_qdn1qqPlLW8I/s3288/Untitled%20design.png" alt="Go Barishal Steamer & Fleet" class="gb-hero-strip-img" />
             </div>
 
-            <div class="sa-card">
-              <div class="card-top">
-                <h3>Fleet Distribution</h3>
-                <span class="pill-tag">By Vehicle</span>
+            <div class="kpi-grid-6">
+              <div class="metric-item"><span class="m-label">Total Rides</span><div class="m-value" id="kpi-total-rides">0</div><span class="m-sub">All-time trips</span></div>
+              <div class="metric-item"><span class="m-label">Completed Rides</span><div class="m-value" id="kpi-completed-rides">0</div><span class="m-sub">Successful drops</span></div>
+              <div class="metric-item"><span class="m-label">Online Drivers</span><div class="m-value" id="kpi-online-drivers">0</div><span class="m-sub" id="kpi-driver-breakdown">Bike: 0 | CNG: 0 | Car: 0</span></div>
+              <div class="metric-item"><span class="m-label">Pending bKash</span><div class="m-value text-amber" id="kpi-pending-payments">0</div><span class="m-sub">Awaiting TrxID check</span></div>
+              <div class="metric-item"><span class="m-label">Pass Revenue</span><div class="m-value text-blue" id="kpi-revenue">৳0</div><span class="m-sub">Approved ৳150 passes</span></div>
+              <div class="metric-item"><span class="m-label">Trip GMV (Cash)</span><div class="m-value text-green" id="kpi-gmv">৳0</div><span class="m-sub">Driver direct earnings</span></div>
+            </div>
+
+            <div class="grid-2-col">
+              <div class="sa-card">
+                <div class="card-top"><h3>Rides Analytics (Last 7 Days)</h3><span class="pill-tag">Weekly View</span></div>
+                <div class="chart-canvas-wrap"><canvas id="ridesBarChart"></canvas></div>
               </div>
-              <div class="doughnut-layout">
-                <div class="doughnut-box">
-                  <canvas id="fleetDoughnutChart"></canvas>
+              <div class="sa-card">
+                <div class="card-top"><h3>Fleet Distribution</h3><span class="pill-tag">By Vehicle</span></div>
+                <div class="doughnut-layout">
+                  <div class="doughnut-box"><canvas id="fleetDoughnutChart"></canvas></div>
+                  <div id="fleet-legend" class="custom-legend"></div>
                 </div>
-                <div id="fleet-legend" class="custom-legend"></div>
               </div>
             </div>
-          </div>
 
-          <!-- Bottom Row: Revenue Trend + Top Performers -->
-          <div class="grid-2-col mt-20">
+            <div class="grid-2-col mt-20">
+              <div class="sa-card">
+                <div class="card-top"><h3>Daily Trip GMV Trend (৳)</h3><span class="pill-tag">0% Commission Model</span></div>
+                <div class="chart-canvas-wrap"><canvas id="gmvLineChart"></canvas></div>
+              </div>
+              <div class="sa-card">
+                <div class="card-top"><h3>Top Performing Riders</h3><span class="pill-tag">By Completed Trips</span></div>
+                <div id="top-performers-list" class="performer-list"></div>
+              </div>
+            </div>
+          </section>
+
+          <!-- TAB 2: LIVE MAP -->
+          <section id="tab-map" class="tab-view">
             <div class="sa-card">
               <div class="card-top">
-                <h3>Trip Fare Trend (৳ GMV)</h3>
-                <span class="pill-tag">7-Day Curve</span>
+                <h3>বরিশাল লাইভ ফ্লিট ও রাইড ম্যাপ</h3>
+                <label class="muted-text"><input type="checkbox" id="auto-refresh-map" checked /> Auto-refresh (5s)</label>
               </div>
-              <div class="chart-wrapper">
-                <canvas id="gmvLineChart"></canvas>
+              <div class="map-legend-row">
+                <span><i class="dot bike"></i> Online Bike</span>
+                <span><i class="dot cng"></i> Online CNG</span>
+                <span><i class="dot car"></i> Online Car</span>
+                <span><i class="dot ride"></i> Active Ride Pickup</span>
               </div>
+              <div id="barishal-map" class="map-frame"></div>
             </div>
+          </section>
 
+          <!-- TAB 3: DRIVERS -->
+          <section id="tab-drivers" class="tab-view">
             <div class="sa-card">
-              <div class="card-top">
-                <h3>Top Performing Riders</h3>
-                <span class="pill-tag">By Completed Rides</span>
-              </div>
-              <div id="top-performers-list" class="performer-list">
-                <p class="muted-text">লোড হচ্ছে...</p>
-              </div>
-            </div>
-          </div>
-        </section>
-
-        <!-- ========================================== -->
-        <!-- 2. LIVE BARISHAL FLEET MAP                 -->
-        <!-- ========================================== -->
-        <section id="tab-map" class="tab-view">
-          <div class="sa-card">
-            <div class="card-top">
-              <div>
-                <h3>লাইভ বরিশাল ফ্লিট ম্যাপ (OpenStreetMap)</h3>
-                <p class="muted-text">অনলাইন ড্রাইভার এবং চলমান রাইডের রিয়েল-টাইম অবস্থান</p>
-              </div>
-              <div class="header-cta-group">
-                <label class="checkbox-inline">
-                  <input type="checkbox" id="auto-refresh-map" checked /> অটো রিফ্রেশ (৫ সে.)
-                </label>
-                <button class="btn btn-royal btn-sm" onclick="refreshMapData()">↻ এখনই রিফ্রেশ</button>
-              </div>
-            </div>
-            <div class="map-legend-row">
-              <span><i class="dot bike"></i> বাইক (Bike)</span>
-              <span><i class="dot cng"></i> সিএনজি (CNG)</span>
-              <span><i class="dot car"></i> কার (Car)</span>
-              <span><i class="dot ride"></i> অ্যাক্টিভ রাইড পিকআপ</span>
-            </div>
-            <div id="barishal-map" class="map-frame"></div>
-          </div>
-        </section>
-
-        <!-- ========================================== -->
-        <!-- 3. DRIVER MANAGEMENT                       -->
-        <!-- ========================================== -->
-        <section id="tab-drivers" class="tab-view">
-          <div class="sa-card">
-            <div class="card-top wrap-gap">
-              <div>
+              <div class="card-top wrap-gap">
                 <h3>ড্রাইভার ম্যানেজমেন্ট (KYC &amp; Fleet)</h3>
-                <p class="muted-text">ড্রাইভার অ্যাপ্রুভ, সাসপেন্ড এবং ফ্রি রাইড বা সাপ্তাহিক পাস নিয়ন্ত্রণ করুন</p>
+                <div class="filter-controls">
+                  <input type="text" id="driver-search" class="sa-input" placeholder="নাম, ফোন বা গাড়ির নম্বর..." oninput="renderDriversTable()" />
+                  <select id="driver-filter" class="sa-select" onchange="renderDriversTable()">
+                    <option value="all">সকল ড্রাইভার</option>
+                    <option value="online">অনলাইন ড্রাইভার</option>
+                    <option value="approved">Approved</option>
+                    <option value="pending">Pending</option>
+                    <option value="suspended">Suspended</option>
+                    <option value="expired">Expired Pass</option>
+                  </select>
+                </div>
               </div>
-              <div class="filter-controls">
-                <input type="text" id="driver-search" class="sa-input" placeholder="নাম, ফোন বা গাড়ির নম্বর..." onkeyup="renderDriversTable()" />
-                <select id="driver-filter" class="sa-select" onchange="renderDriversTable()">
-                  <option value="all">সকল ড্রাইভার</option>
-                  <option value="online">অনলাইন (Online)</option>
-                  <option value="approved">অনুমোদিত (Approved)</option>
-                  <option value="pending">পেন্ডিং (Pending)</option>
-                  <option value="suspended">সাসপেন্ডেড (Suspended)</option>
-                  <option value="expired">মেয়াদোত্তীর্ণ প্যাকেজ</option>
-                </select>
+              <div class="table-wrap">
+                <table class="sa-table">
+                  <thead>
+                    <tr>
+                      <th>ড্রাইভার ও ফোন</th>
+                      <th>গাড়ির তথ্য</th>
+                      <th>পারফরম্যান্স</th>
+                      <th>ফ্রি রাইড</th>
+                      <th>প্যাকেজ মেয়াদ</th>
+                      <th>স্ট্যাটাস</th>
+                      <th>অ্যাকশন</th>
+                    </tr>
+                  </thead>
+                  <tbody id="drivers-tbody"></tbody>
+                </table>
               </div>
             </div>
-            <div class="table-wrap">
-              <table class="sa-table">
-                <thead>
-                  <tr>
-                    <th>ড্রাইভার ও ফোন</th>
-                    <th>গাড়ির তথ্য</th>
-                    <th>পারফরম্যান্স</th>
-                    <th>ফ্রি রাইড</th>
-                    <th>প্যাকেজ মেয়াদ</th>
-                    <th>স্ট্যাটাস</th>
-                    <th>অ্যাকশন</th>
-                  </tr>
-                </thead>
-                <tbody id="drivers-tbody"></tbody>
-              </table>
-            </div>
-          </div>
-        </section>
+          </section>
 
-        <!-- ========================================== -->
-        <!-- 4. BKASH WEEKLY PASS VERIFICATION          -->
-        <!-- ========================================== -->
-        <section id="tab-payments" class="tab-view">
-          <div class="sa-card">
-            <div class="card-top">
-              <div>
-                <h3>বিকাশ সাপ্তাহিক পাস যাচাই (৳১৫০)</h3>
-                <p class="muted-text">Approve করলে স্বয়ংক্রিয়ভাবে ড্রাইভারের অ্যাকাউন্টে +৭ দিন যুক্ত হবে</p>
+          <!-- TAB 4: BKASH PAYMENTS -->
+          <section id="tab-payments" class="tab-view">
+            <div class="sa-card">
+              <div class="card-top">
+                <h3>বিকাশ সাপ্তাহিক পাস ভেরিফিকেশন (৳১৫০)</h3>
+                <button class="btn btn-royal btn-sm" onclick="loadPayments()">Refresh List</button>
               </div>
-              <button class="btn btn-royal btn-sm" onclick="loadPayments()">↻ রিফ্রেশ</button>
+              <div class="table-wrap">
+                <table class="sa-table">
+                  <thead>
+                    <tr>
+                      <th>সময়</th>
+                      <th>ড্রাইভার</th>
+                      <th>পরিমাণ</th>
+                      <th>bKash TrxID</th>
+                      <th>স্ট্যাটাস</th>
+                      <th>অ্যাকশন</th>
+                    </tr>
+                  </thead>
+                  <tbody id="payments-tbody"></tbody>
+                </table>
+              </div>
             </div>
-            <div class="table-wrap">
-              <table class="sa-table">
-                <thead>
-                  <tr>
-                    <th>সময়</th>
-                    <th>ড্রাইভার ও ফোন</th>
-                    <th>পরিমাণ</th>
-                    <th>bKash TrxID</th>
-                    <th>স্ট্যাটাস</th>
-                    <th>সিদ্ধান্ত (RPC)</th>
-                  </tr>
-                </thead>
-                <tbody id="payments-tbody"></tbody>
-              </table>
-            </div>
-          </div>
-        </section>
+          </section>
 
-        <!-- ========================================== -->
-        <!-- 5. RIDES & DISPATCH MONITOR                -->
-        <!-- ========================================== -->
-        <section id="tab-rides" class="tab-view">
-          <div class="sa-card">
-            <div class="card-top wrap-gap">
-              <div>
+          <!-- TAB 5: RIDES MONITOR -->
+          <section id="tab-rides" class="tab-view">
+            <div class="sa-card">
+              <div class="card-top wrap-gap">
                 <h3>রাইড ও ডিসপ্যাচ মনিটর</h3>
-                <p class="muted-text">সকল চলমান ও সম্পন্ন রাইডের লাইভ অবস্থা এবং অ্যাডমিন ওভাররাইড</p>
-              </div>
-              <div class="filter-controls">
                 <select id="ride-status-filter" class="sa-select" onchange="loadRides()">
                   <option value="all">সকল স্ট্যাটাস</option>
                   <option value="searching">Searching</option>
@@ -435,325 +317,200 @@
                   <option value="completed">Completed</option>
                   <option value="cancelled">Cancelled</option>
                 </select>
-                <button class="btn btn-royal btn-sm" onclick="loadRides()">↻ রিফ্রেশ</button>
               </div>
-            </div>
-            <div class="table-wrap">
-              <table class="sa-table">
-                <thead>
-                  <tr>
-                    <th>রুট (Pickup → Drop)</th>
-                    <th>দূরত্ব ও ভাড়া</th>
-                    <th>OTP</th>
-                    <th>যাত্রী</th>
-                    <th>ড্রাইভার</th>
-                    <th>স্ট্যাটাস ও রেটিং</th>
-                    <th>অ্যাডমিন ওভাররাইড</th>
-                  </tr>
-                </thead>
-                <tbody id="rides-tbody"></tbody>
-              </table>
-            </div>
-          </div>
-        </section>
-
-        <!-- ========================================== -->
-        <!-- 6. PASSENGERS & INCIDENT REPORTS           -->
-        <!-- ========================================== -->
-        <section id="tab-passengers" class="tab-view">
-          <div class="sa-card">
-            <div class="card-top wrap-gap">
-              <div>
-                <h3>যাত্রী তালিকা ও অভিযোগ রিপোর্ট</h3>
-                <p class="muted-text">নিবন্ধিত যাত্রী এবং রাইড সংক্রান্ত অভিযোগসমূহ</p>
-              </div>
-              <div class="header-cta-group">
-                <button class="btn btn-royal btn-sm" id="btn-tab-pass" onclick="togglePassReport('passengers')">যাত্রী তালিকা</button>
-                <button class="btn btn-white btn-sm" id="btn-tab-rep" onclick="togglePassReport('reports')">অভিযোগ রিপোর্ট</button>
-              </div>
-            </div>
-
-            <div id="view-passengers" class="table-wrap">
-              <table class="sa-table">
-                <thead>
-                  <tr>
-                    <th>যাত্রীর নাম</th>
-                    <th>ফোন নম্বর</th>
-                    <th>মোট রাইড</th>
-                    <th>স্ট্যাটাস</th>
-                  </tr>
-                </thead>
-                <tbody id="passengers-tbody"></tbody>
-              </table>
-            </div>
-
-            <div id="view-reports" class="table-wrap hidden">
-              <table class="sa-table">
-                <thead>
-                  <tr>
-                    <th>তারিখ</th>
-                    <th>ধরন</th>
-                    <th>কারণ ও বিস্তারিত</th>
-                    <th>Ride ID</th>
-                    <th>Driver ID</th>
-                  </tr>
-                </thead>
-                <tbody id="reports-tbody"></tbody>
-              </table>
-            </div>
-          </div>
-        </section>
-<!-- ========================================== -->
-        <!-- 6.5. PROMO & ADS (NOTIFICATIONS & OFFERS)  -->
-        <!-- ========================================== -->
-        <section id="tab-promotions" class="tab-view">
-          <div class="grid-2-col promo-main-grid" style="grid-template-columns: repeat(2, minmax(0, 1fr)); align-items: start;">
-            
-            <!-- Left Card: Send Passenger / Rider Notifications & Ads -->
-            <div class="sa-card">
-              <div class="card-top">
-                <div>
-                  <h3>📢 নোটিফিকেশন ও বিজ্ঞাপন পাঠান</h3>
-                  <p class="muted-text">প্যাসেঞ্জার বা রাইডার অ্যাপের হোমস্ক্রিনে লাইভ ব্যানার/নোটিশ দেখান</p>
-                </div>
-              </div>
-              <form id="announcement-form">
-                <div class="form-group">
-                  <label>কোন অ্যাপে দেখাবে (Target App)</label>
-                  <select id="ann-target" class="sa-select" required>
-                    <option value="passenger">শুধু প্যাসেঞ্জার অ্যাপ (Passenger Only)</option>
-                    <option value="rider">শুধু রাইডার অ্যাপ (Rider Only)</option>
-                    <option value="both">উভয় অ্যাপ (Both Apps)</option>
-                  </select>
-                </div>
-                <div class="form-group">
-                  <label>ব্যাজ টেক্সট (Badge Text)</label>
-                  <input type="text" id="ann-badge" class="sa-input" placeholder="যেমন: অফার, বিজ্ঞাপন, জরুরি নোটিশ" value="অফার" required />
-                </div>
-                <div class="form-group">
-                  <label>শিরোনাম (Title)</label>
-                  <input type="text" id="ann-title" class="sa-input" placeholder="যেমন: প্রথম ৩ রাইডে ৩০ টাকা ছাড়!" required />
-                </div>
-                <div class="form-group">
-                  <label>বিস্তারিত বার্তা (Message)</label>
-                  <input type="text" id="ann-message" class="sa-input" placeholder="বিস্তারিত মেসেজ লিখুন..." required />
-                </div>
-                <button type="submit" class="btn btn-royal btn-block">🚀 পাবলিশ করুন (Publish Notice)</button>
-              </form>
-
-              <hr style="border:none; border-top:1px solid #E8ECEF; margin:22px 0;" />
-              <h4 style="margin-bottom:12px;">চলমান নোটিফিকেশন ও বিজ্ঞাপনসমূহ</h4>
               <div class="table-wrap">
                 <table class="sa-table">
                   <thead>
                     <tr>
-                      <th>টার্গেট ও ব্যাজ</th>
-                      <th>শিরোনাম ও মেসেজ</th>
-                      <th>অবস্থা</th>
-                      <th>অ্যাকশন</th>
-                    </tr>
-                  </thead>
-                  <tbody id="announcements-tbody"></tbody>
-                </table>
-              </div>
-            </div>
-
-            <!-- Right Card: Manage Passenger Discount Promo Codes -->
-            <div class="sa-card">
-              <div class="card-top">
-                <div>
-                  <h3>🎟️ যাত্রী ডিসকাউন্ট প্রোমো কোড</h3>
-                  <p class="muted-text">প্যাসেঞ্জার অ্যাপে ভাড়া ছাড়ের কুপন তৈরি ও নিয়ন্ত্রণ করুন</p>
-                </div>
-              </div>
-              <form id="promo-form">
-                <div class="form-group">
-                  <label>প্রোমো কোড (Promo Code)</label>
-                  <input type="text" id="promo-code" class="sa-input" style="text-transform:uppercase; font-weight:700;" placeholder="যেমন: BARISHAL50" required />
-                </div>
-
-                <div class="form-row-2">
-                  <div class="form-group">
-                    <label>ছাড়ের ধরন (Discount Type)</label>
-                    <select id="promo-type" class="sa-select">
-                      <option value="flat">Flat ৳ (নির্দিষ্ট টাকা)</option>
-                      <option value="percent">Percentage % (শতাংশ)</option>
-                    </select>
-                  </div>
-                  <div class="form-group">
-                    <label>ছাড়ের পরিমাণ (Value)</label>
-                    <input type="number" step="0.01" id="promo-value" class="sa-input" placeholder="যেমন: 30 বা 15" required />
-                  </div>
-                </div>
-
-                <div class="form-row-2">
-                  <div class="form-group">
-                    <label>সর্বোচ্চ ছাড় (Max Discount ৳)</label>
-                    <input type="number" step="0.01" id="promo-max" class="sa-input" value="50" required />
-                  </div>
-                  <div class="form-group">
-                    <label>সর্বনিম্ন ভাড়া শর্ত (Min Fare ৳)</label>
-                    <input type="number" step="0.01" id="promo-min" class="sa-input" value="60" required />
-                  </div>
-                </div>
-
-                <div class="form-row-2">
-                  <div class="form-group">
-                    <label>প্রতি ইউজার সীমা (Max Uses/User)</label>
-                    <input type="number" min="1" id="promo-max-uses" class="sa-input" value="1" required />
-                  </div>
-                  <div class="form-group">
-                    <label>মেয়াদ (Expiry Date - ঐচ্ছিক)</label>
-                    <input type="datetime-local" id="promo-expires-at" class="sa-input" />
-                  </div>
-                </div>
-
-                <button type="submit" class="btn btn-success btn-block">➕ প্রোমো কোড তৈরি করুন</button>
-              </form>
-
-              <hr style="border:none; border-top:1px solid #E8ECEF; margin:22px 0;" />
-              <h4 style="margin-bottom:12px;">সকল প্রোমো কোড তালিকা</h4>
-              <div class="table-wrap">
-                <table class="sa-table">
-                  <thead>
-                    <tr>
-                      <th>কোড</th>
-                      <th>ছাড় ও শর্ত</th>
+                      <th>রুট (Pickup → Drop)</th>
+                      <th>দূরত্ব ও ভাড়া</th>
+                      <th>OTP</th>
+                      <th>যাত্রী</th>
+                      <th>ড্রাইভার</th>
                       <th>স্ট্যাটাস</th>
                       <th>অ্যাকশন</th>
                     </tr>
                   </thead>
-                  <tbody id="promos-tbody"></tbody>
+                  <tbody id="rides-tbody"></tbody>
                 </table>
               </div>
             </div>
+          </section>
 
+          <!-- TAB 6: PASSENGERS & REPORTS -->
+          <section id="tab-passengers" class="tab-view">
+            <div class="sa-card">
+              <div class="card-top wrap-gap">
+                <h3>যাত্রী তালিকা ও অভিযোগ রিপোর্ট</h3>
+                <div class="btn-row">
+                  <button class="btn btn-royal btn-sm" onclick="togglePassReport('passengers')">যাত্রী তালিকা</button>
+                  <button class="btn btn-white btn-sm" onclick="togglePassReport('reports')">অভিযোগ রিপোর্ট</button>
+                </div>
+              </div>
+              <div id="view-passengers" class="table-wrap">
+                <table class="sa-table">
+                  <thead><tr><th>নাম</th><th>ফোন নম্বর</th><th>মোট রাইড</th><th>স্ট্যাটাস ও পাসওয়ার্ড</th></tr></thead>
+                  <tbody id="passengers-tbody"></tbody>
+                </table>
+              </div>
+              <div id="view-reports" class="table-wrap hidden">
+                <table class="sa-table">
+                  <thead><tr><th>সময়</th><th>ধরন</th><th>কারণ ও বিবরণ</th><th>Ride ID</th><th>Driver ID</th></tr></thead>
+                  <tbody id="reports-tbody"></tbody>
+                </table>
+              </div>
+            </div>
+          </section>
+
+          <!-- TAB 7: PROMOS & ANNOUNCEMENTS -->
+          <section id="tab-promotions" class="tab-view">
+            <div class="grid-2-col promo-main-grid">
+              <div class="sa-card">
+                <div class="card-top"><h3>অ্যাপ নোটিফিকেশন ও বিজ্ঞাপন</h3></div>
+                <form id="announcement-form">
+                  <div class="form-row-2">
+                    <div class="form-group">
+                      <label>টার্গেট অ্যাপ</label>
+                      <select id="ann-target" class="sa-select">
+                        <option value="both">Passenger &amp; Rider (Both)</option>
+                        <option value="passenger">Passenger App</option>
+                        <option value="rider">Rider App</option>
+                      </select>
+                    </div>
+                    <div class="form-group">
+                      <label>ব্যাজ টেক্সট</label>
+                      <input type="text" id="ann-badge" class="sa-input" value="Notice" required />
+                    </div>
+                  </div>
+                  <div class="form-group"><label>শিরোনাম</label><input type="text" id="ann-title" class="sa-input" required /></div>
+                  <div class="form-group"><label>বিস্তারিত বার্তা</label><input type="text" id="ann-message" class="sa-input" required /></div>
+                  <button type="submit" class="btn btn-royal btn-block">পাবলিশ করুন</button>
+                </form>
+                <div class="table-wrap mt-20">
+                  <table class="sa-table">
+                    <thead><tr><th>টার্গেট</th><th>বার্তা</th><th>অবস্থা</th><th>ডিলিট</th></tr></thead>
+                    <tbody id="announcements-tbody"></tbody>
+                  </table>
+                </div>
+              </div>
+
+              <div class="sa-card">
+                <div class="card-top"><h3>প্রোমো কোড ও ডিসকাউন্ট</h3></div>
+                <form id="promo-form">
+                  <div class="form-row-2">
+                    <div class="form-group"><label>প্রোমো কোড</label><input type="text" id="promo-code" class="sa-input" placeholder="BARISHAL20" required /></div>
+                    <div class="form-group">
+                      <label>ডিসকাউন্ট ধরন</label>
+                      <select id="promo-type" class="sa-select">
+                        <option value="flat">Flat (৳ টাকা)</option>
+                        <option value="percent">Percentage (%)</option>
+                      </select>
+                    </div>
+                  </div>
+                  <div class="form-row-2">
+                    <div class="form-group"><label>ডিসকাউন্ট মান</label><input type="number" id="promo-value" class="sa-input" required /></div>
+                    <div class="form-group"><label>সর্বোচ্চ ছাড় (৳)</label><input type="number" id="promo-max" class="sa-input" value="0" /></div>
+                  </div>
+                  <div class="form-row-2">
+                    <div class="form-group"><label>সর্বনিম্ন ভাড়া (৳)</label><input type="number" id="promo-min" class="sa-input" value="0" /></div>
+                    <div class="form-group"><label>প্রতি ইউজার লিমিট</label><input type="number" id="promo-max-uses" class="sa-input" value="1" min="1" /></div>
+                  </div>
+                  <div class="form-group"><label>মেয়াদ শেষের তারিখ (ঐচ্ছিক)</label><input type="datetime-local" id="promo-expires-at" class="sa-input" /></div>
+                  <button type="submit" class="btn btn-royal btn-block">প্রোমো তৈরি করুন</button>
+                </form>
+                <div class="table-wrap mt-20">
+                  <table class="sa-table">
+                    <thead><tr><th>কোড</th><th>অফার</th><th>অবস্থা</th><th>ডিলিট</th></tr></thead>
+                    <tbody id="promos-tbody"></tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <!-- TAB 8: SETTINGS -->
+          <section id="tab-settings" class="tab-view">
+            <div class="sa-card">
+              <div class="card-top"><h3>ভাড়া ও অ্যাপ কনফিগারেশন</h3></div>
+              <form id="settings-form">
+                <div class="grid-2-col">
+                  <div>
+                    <h4 style="margin-bottom:10px;">Bike Fare (৳)</h4>
+                    <div class="form-row-2">
+                      <div class="form-group"><label>Base Fare</label><input type="number" id="set-bike-base" class="sa-input" required /></div>
+                      <div class="form-group"><label>Per KM</label><input type="number" id="set-bike-km" class="sa-input" required /></div>
+                    </div>
+                    <div class="form-group"><label>Min Fare</label><input type="number" id="set-bike-min" class="sa-input" required /></div>
+
+                    <h4 style="margin:14px 0 10px;">CNG Fare (৳)</h4>
+                    <div class="form-row-2">
+                      <div class="form-group"><label>Base Fare</label><input type="number" id="set-cng-base" class="sa-input" required /></div>
+                      <div class="form-group"><label>Per KM</label><input type="number" id="set-cng-km" class="sa-input" required /></div>
+                    </div>
+                    <div class="form-group"><label>Min Fare</label><input type="number" id="set-cng-min" class="sa-input" required /></div>
+                  </div>
+
+                  <div>
+                    <h4 style="margin-bottom:10px;">Car Fare (৳)</h4>
+                    <div class="form-row-2">
+                      <div class="form-group"><label>Base Fare</label><input type="number" id="set-car-base" class="sa-input" required /></div>
+                      <div class="form-group"><label>Per KM</label><input type="number" id="set-car-km" class="sa-input" required /></div>
+                    </div>
+                    <div class="form-group"><label>Min Fare</label><input type="number" id="set-car-min" class="sa-input" required /></div>
+
+                    <h4 style="margin:14px 0 10px;">Pass &amp; Support</h4>
+                    <div class="form-row-2">
+                      <div class="form-group"><label>Weekly Pass (৳)</label><input type="number" id="set-weekly-price" class="sa-input" required /></div>
+                      <div class="form-group"><label>bKash Merchant/Personal</label><input type="text" id="set-bkash-num" class="sa-input" required /></div>
+                    </div>
+                    <div class="form-group"><label>Helpline Number</label><input type="text" id="set-support-phone" class="sa-input" required /></div>
+                  </div>
+                </div>
+                <button type="submit" class="btn btn-royal btn-lg mt-12">সেটিংস সেভ করুন</button>
+              </form>
+            </div>
+          </section>
+        </div>
+      </main>
+
+      <button class="floating-gear-btn" title="Fare & App Settings" onclick="switchTab('settings')">
+        <svg class="nav-svg" style="width:20px;height:20px;" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+      </button>
+
+      <!-- PASSWORD RESET MODAL -->
+      <div id="reset-modal" class="modal-backdrop hidden">
+        <div class="modal-card">
+          <div class="card-top">
+            <h3>Find ID &amp; Reset Password</h3>
+            <button class="icon-btn" onclick="closeResetModal()">✕</button>
           </div>
-        </section>
-        <!-- ========================================== -->
-        <!-- 7. FARE & APP SETTINGS                     -->
-        <!-- ========================================== -->
-        <section id="tab-settings" class="tab-view">
-          <form id="settings-form">
-            <div class="grid-2-col">
-              <div class="sa-card">
-                <h3>🏍️ বাইক ভাড়া (Bike Fare)</h3>
-                <div class="form-group mt-12">
-                  <label>বেস ভাড়া (Base Fare ৳)</label>
-                  <input type="number" step="0.01" id="set-bike-base" class="sa-input" required />
-                </div>
-                <div class="form-group">
-                  <label>প্রতি কি.মি. (Per KM ৳)</label>
-                  <input type="number" step="0.01" id="set-bike-km" class="sa-input" required />
-                </div>
-                <div class="form-group">
-                  <label>সর্বনিম্ন ভাড়া (Min Fare ৳)</label>
-                  <input type="number" step="0.01" id="set-bike-min" class="sa-input" required />
-                </div>
-              </div>
-
-              <div class="sa-card">
-                <h3>🛺 সিএনজি ভাড়া (CNG Fare)</h3>
-                <div class="form-group mt-12">
-                  <label>বেস ভাড়া (Base Fare ৳)</label>
-                  <input type="number" step="0.01" id="set-cng-base" class="sa-input" required />
-                </div>
-                <div class="form-group">
-                  <label>প্রতি কি.মি. (Per KM ৳)</label>
-                  <input type="number" step="0.01" id="set-cng-km" class="sa-input" required />
-                </div>
-                <div class="form-group">
-                  <label>সর্বনিম্ন ভাড়া (Min Fare ৳)</label>
-                  <input type="number" step="0.01" id="set-cng-min" class="sa-input" required />
-                </div>
-              </div>
-
-              <div class="sa-card">
-                <h3>🚗 কার ভাড়া (Car Fare)</h3>
-                <div class="form-group mt-12">
-                  <label>বেস ভাড়া (Base Fare ৳)</label>
-                  <input type="number" step="0.01" id="set-car-base" class="sa-input" required />
-                </div>
-                <div class="form-group">
-                  <label>প্রতি কি.মি. (Per KM ৳)</label>
-                  <input type="number" step="0.01" id="set-car-km" class="sa-input" required />
-                </div>
-                <div class="form-group">
-                  <label>সর্বনিম্ন ভাড়া (Min Fare ৳)</label>
-                  <input type="number" step="0.01" id="set-car-min" class="sa-input" required />
-                </div>
-              </div>
-
-              <div class="sa-card">
-                <h3>💳 পেমেন্ট ও সাপোর্ট কনফিগারেশন</h3>
-                <div class="form-group mt-12">
-                  <label>সাপ্তাহিক পাস মূল্য (Weekly Pass ৳)</label>
-                  <input type="number" id="set-weekly-price" class="sa-input" required />
-                </div>
-                <div class="form-group">
-                  <label>অ্যাডমিন বিকাশ নম্বর (bKash Number)</label>
-                  <input type="text" id="set-bkash-num" class="sa-input" required />
-                </div>
-                <div class="form-group">
-                  <label>সাপোর্ট ফোন নম্বর (Support Phone)</label>
-                  <input type="text" id="set-support-phone" class="sa-input" required />
-                </div>
-              </div>
+          <div class="form-group">
+            <label>ফোন নম্বর দিয়ে খুঁজুন</label>
+            <div style="display:flex;gap:8px;">
+              <input type="text" id="reset-phone-input" class="sa-input" placeholder="017XXXXXXXX" />
+              <button type="button" class="btn btn-royal" onclick="findUserByPhone()">Search</button>
             </div>
-
-            <div class="mt-20">
-              <button type="submit" class="btn btn-royal btn-lg">💾 সকল পরিবর্তন সেভ করুন (Update Settings)</button>
+          </div>
+          <div id="reset-user-box" class="user-info-card hidden">
+            <input type="hidden" id="reset-target-uid" />
+            <p><strong>নাম:</strong> <span id="reset-user-name"></span> (<span id="reset-user-role"></span>)</p>
+            <p class="mt-12"><strong>Login ID:</strong> <code id="reset-user-email"></code>
+              <button type="button" class="btn btn-sm btn-white" onclick="copyResetEmail()">Copy</button>
+            </p>
+            <div class="form-group mt-12">
+              <label>নতুন পাসওয়ার্ড দিন</label>
+              <input type="text" id="reset-new-pass" class="sa-input" placeholder="কমপক্ষে ৬ অক্ষর" />
             </div>
-          </form>
-        </section>
-          </main>
-    </div>
-  </div>
-<!-- ID & Password Reset Modal -->
-<div id="reset-modal" class="modal-backdrop hidden">
-  <div class="modal-card">
-    <div class="card-top">
-      <h3>🔑 Find ID &amp; Reset Password</h3>
-      <button class="icon-btn" onclick="closeResetModal()">✕</button>
-    </div>
-
-    <div class="form-group">
-      <label>ফোন নম্বর দিয়ে খুঁজুন (Phone Search)</label>
-      <div class="btn-row">
-        <input type="text" id="reset-phone-input" class="sa-input" placeholder="01XXXXXXXXX" style="flex:1" />
-        <button type="button" class="btn btn-royal btn-sm" onclick="findUserByPhone()">খুঁজুন</button>
+            <button type="button" class="btn btn-royal btn-block" onclick="submitNewPassword()">পাসওয়ার্ড পরিবর্তন করুন</button>
+          </div>
+        </div>
       </div>
     </div>
+  </template>
 
-    <div id="reset-user-box" class="user-info-card hidden">
-      <input type="hidden" id="reset-target-uid" />
-      <div><strong>নাম:</strong> <span id="reset-user-name">—</span></div>
-      <div><strong>রোল (Role):</strong> <span id="reset-user-role" class="status-badge sb-blue">—</span></div>
-      <div class="mt-12">
-        <strong>Login Email (ID):</strong><br/>
-        <span class="trx-chip mt-12">
-          <span id="reset-user-email">—</span>
-          <button type="button" class="btn btn-white btn-sm" onclick="copyResetEmail()">Copy</button>
-        </span>
-      </div>
-
-      <hr style="border:none; border-top:1px solid #E8ECEF; margin:16px 0;" />
-
-      <div class="form-group">
-        <label>নতুন পাসওয়ার্ড দিন (New Password - min 6 chars)</label>
-        <input type="text" id="reset-new-pass" class="sa-input" placeholder="কমপক্ষে ৬ অক্ষরের পাসওয়ার্ড" />
-      </div>
-      <button type="button" class="btn btn-success btn-block" onclick="submitNewPassword()">💾 Update Password</button>
-    </div>
-  </div>
-</div>
-  <!-- Floating Settings Shortcut Button (StarAdmin Signature) -->
-  <button class="floating-gear-btn" title="Fare & App Settings" onclick="switchTab('settings')">⚙️</button>
-
-  <!-- Libraries -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-  <script src="app.js"></script>
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script src="app.js?v=8"></script>
 </body>
 </html>
