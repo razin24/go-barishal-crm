@@ -87,6 +87,10 @@
           <span class="nav-icon">🏍️</span>
           <span>ড্রাইভার ম্যানেজমেন্ট</span>
         </button>
+        <button class="nav-item" data-tab="promotions">
+          <span class="nav-icon">📢</span>
+          <span>নোটিফিকেশন ও অফার (Promo &amp; Ads)</span>
+        </button>
         <button class="nav-item" data-tab="passengers">
           <span class="nav-icon">👥</span>
           <span>যাত্রী ও রিপোর্ট</span>
@@ -421,7 +425,117 @@
             </div>
           </div>
         </section>
+<!-- ========================================== -->
+        <!-- 6.5. PROMO & ADS (NOTIFICATIONS & OFFERS)  -->
+        <!-- ========================================== -->
+        <section id="tab-promotions" class="tab-view">
+          <div class="grid-2-col">
+            <!-- Left: Send Passenger / Rider Notifications & Ads -->
+            <div class="sa-card">
+              <div class="card-top">
+                <div>
+                  <h3>📢 নোটিফিকেশন ও বিজ্ঞাপন পাঠান</h3>
+                  <p class="muted-text">প্যাসেঞ্জার বা রাইডার অ্যাপের হোমস্ক্রিনে লাইভ ব্যানার/নোটিশ দেখান</p>
+                </div>
+              </div>
+              <form id="announcement-form">
+                <div class="form-group">
+                  <label>কোন অ্যাপে দেখাবে (Target App)</label>
+                  <select id="ann-target" class="sa-select" required>
+                    <option value="passenger">শুধু প্যাসেঞ্জার অ্যাপ (Passenger Only)</option>
+                    <option value="rider">শুধু রাইডার অ্যাপ (Rider Only)</option>
+                    <option value="both">উভয় অ্যাপ (Both Apps)</option>
+                  </select>
+                </div>
+                <div class="form-group">
+                  <label>ব্যাজ টেক্সট (Badge Text)</label>
+                  <input type="text" id="ann-badge" class="sa-input" placeholder="যেমন: অফার, বিজ্ঞাপন, জরুরি নোটিশ" value="অফার" required />
+                </div>
+                <div class="form-group">
+                  <label>শিরোনাম (Title)</label>
+                  <input type="text" id="ann-title" class="sa-input" placeholder="যেমন: প্রথম ৩ রাইডে ৩০ টাকা ছাড়!" required />
+                </div>
+                <div class="form-group">
+                  <label>বিস্তারিত বার্তা (Message)</label>
+                  <input type="text" id="ann-message" class="sa-input" placeholder="বিস্তারিত মেসেজ লিখুন..." required />
+                </div>
+                <button type="submit" class="btn btn-royal btn-block">🚀 পাবলিশ করুন (Publish Notice)</button>
+              </form>
 
+              <hr style="border:none; border-top:1px solid #E8ECEF; margin:20px 0;" />
+              <h4 style="margin-bottom:10px;">চলমান নোটিফিকেশন ও বিজ্ঞাপনসমূহ</h4>
+              <div class="table-wrap">
+                <table class="sa-table">
+                  <thead>
+                    <tr>
+                      <th>টার্গেট ও ব্যাজ</th>
+                      <th>শিরোনাম ও মেসেজ</th>
+                      <th>অবস্থা</th>
+                      <th>অ্যাকশন</th>
+                    </tr>
+                  </thead>
+                  <tbody id="announcements-tbody"></tbody>
+                </table>
+              </div>
+            </div>
+
+            <!-- Right: Manage Passenger Discount Promo Codes -->
+            <div class="sa-card">
+              <div class="card-top">
+                <div>
+                  <h3>🎟️ যাত্রী ডিসকাউন্ট প্রোমো কোড</h3>
+                  <p class="muted-text">প্যাসেঞ্জার অ্যাপে ভাড়া ছাড়ের কুপন তৈরি ও নিয়ন্ত্রণ করুন</p>
+                </div>
+              </div>
+              <form id="promo-form">
+                <div class="form-group">
+                  <label>প্রোমো কোড (Promo Code)</label>
+                  <input type="text" id="promo-code" class="sa-input" style="text-transform:uppercase; font-weight:700;" placeholder="যেমন: BARISHAL50" required />
+                </div>
+                <div class="grid-2-col" style="gap:10px;">
+                  <div class="form-group">
+                    <label>ছাড়ের ধরন (Discount Type)</label>
+                    <select id="promo-type" class="sa-select">
+                      <option value="flat">Flat ৳ (নির্দিষ্ট টাকা)</option>
+                      <option value="percent">Percentage % (শতাংশ)</option>
+                    </select>
+                  </div>
+                  <div class="form-group">
+                    <label>ছাড়ের পরিমাণ (Value)</label>
+                    <input type="number" step="0.01" id="promo-value" class="sa-input" placeholder="যেমন: 30 বা 15" required />
+                  </div>
+                </div>
+                <div class="grid-2-col" style="gap:10px;">
+                  <div class="form-group">
+                    <label>সর্বোচ্চ ছাড় (Max Discount ৳)</label>
+                    <input type="number" step="0.01" id="promo-max" class="sa-input" value="50" required />
+                  </div>
+                  <div class="form-group">
+                    <label>সর্বনিম্ন ভাড়া শর্ত (Min Fare ৳)</label>
+                    <input type="number" step="0.01" id="promo-min" class="sa-input" value="60" required />
+                  </div>
+                </div>
+                <button type="submit" class="btn btn-success btn-block">➕ প্রোমো কোড তৈরি করুন</button>
+              </form>
+
+              <hr style="border:none; border-top:1px solid #E8ECEF; margin:20px 0;" />
+              <h4 style="margin-bottom:10px;">সকল প্রোমো কোড তালিকা</h4>
+              <div class="table-wrap">
+                <table class="sa-table">
+                  <thead>
+                    <tr>
+                      <th>কোড</th>
+                      <th>ছাড় ও শর্ত</th>
+                      <th>স্ট্যাটাস</th>
+                      <th>অ্যাকশন</th>
+                    </tr>
+                  </thead>
+                  <tbody id="promos-tbody"></tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </section>
         <!-- ========================================== -->
         <!-- 7. FARE & APP SETTINGS                     -->
         <!-- ========================================== -->
