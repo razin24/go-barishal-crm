@@ -40,56 +40,66 @@ document.addEventListener('DOMContentLoaded', async () => {
 
 document.getElementById('login-form').addEventListener('submit', async (e) => {
   e.preventDefault();
-  const email = document.getElementById('login-email').value.trim();
-  const password = document.getElementById('login-password').value;
   const errBox = document.getElementById('login-error');
   const btn = document.getElementById('login-btn');
+
+  // ১. পরপর ৩ বার ভুল পাসওয়ার্ড দিলে ৫ মিনিট লগইন লক
+  const lockUntil = Number(localStorage.getItem('gb_login_lock_until') || 0);
+  if (Date.now() < lockUntil) {
+    const minsLeft = Math.ceil((lockUntil - Date.now()) / 60000);
+    errBox.textContent = `নিরাপত্তাজনিত কারণে লগইন লক করা হয়েছে। ${minsLeft} মিনিট পর আবার চেষ্টা করুন।`;
+    errBox.classList.remove('hidden');
+    return;
+  }
+
+  // ২. লুকানো বট-ট্র্যাপ চেক
+  const trap = document.getElementById('bot-trap');
+  if (trap && trap.value !== '') return;
+
+  // ৩. Cloudflare Turnstile CAPTCHA টোকেন চেক
+  const captchaToken = document.querySelector('[name="cf-turnstile-response"]')?.value;
+  if (!captchaToken) {
+    errBox.textContent = 'অনুগ্রহ করে নিচের নিরাপত্তা যাচাই (CAPTCHA) সম্পন্ন করুন।';
+    errBox.classList.remove('hidden');
+    return;
+  }
+
+  const email = document.getElementById('login-email').value.trim();
+  const password = document.getElementById('login-password').value;
 
   errBox.classList.add('hidden');
   btn.disabled = true;
   btn.textContent = 'যাচাই করা হচ্ছে...';
 
-  const { data, error } = await db.auth.signInWithPassword({ email, password });
+  const { data, error } = await db.auth.signInWithPassword({
+    email,
+    password,
+    options: { captchaToken }
+  });
+
+  if (window.turnstile) turnstile.reset();
   btn.disabled = false;
   btn.textContent = 'সাইন ইন করুন';
 
   if (error) {
-    errBox.textContent = 'লগইন ব্যর্থ: ' + error.message;
+    const attempts = Number(localStorage.getItem('gb_failed_attempts') || 0) + 1;
+    localStorage.setItem('gb_failed_attempts', attempts);
+
+    if (attempts >= 3) {
+      localStorage.setItem('gb_login_lock_until', Date.now() + 5 * 60 * 1000);
+      localStorage.setItem('gb_failed_attempts', '0');
+      errBox.textContent = 'পরপর ৩ বার ভুল পাসওয়ার্ড দেওয়ায় ৫ মিনিটের জন্য লগইন বন্ধ করা হয়েছে!';
+    } else {
+      errBox.textContent = `লগইন ব্যর্থ (${attempts}/3): ${error.message}`;
+    }
     errBox.classList.remove('hidden');
     return;
   }
+
+  localStorage.removeItem('gb_failed_attempts');
+  localStorage.removeItem('gb_login_lock_until');
   await verifyAdminSession(data.user.id);
 });
-
-async function verifyAdminSession(userId) {
-  const errBox = document.getElementById('login-error');
-  const { data: profile, error } = await db
-    .from('profiles')
-    .select('role, full_name')
-    .eq('id', userId)
-    .single();
-
-  if (error || !profile || profile.role !== 'admin') {
-    await db.auth.signOut();
-    errBox.textContent = 'Access Denied: Admin privileges required';
-    errBox.classList.remove('hidden');
-    return;
-  }
-
-  document.getElementById('admin-name-display').textContent = profile.full_name || 'Admin';
-  document.getElementById('login-screen').classList.add('hidden');
-  document.getElementById('app-shell').classList.remove('hidden');
-
-  initSidebarEvents();
-  await cacheProfiles();
-  await loadDashboard();
-}
-
-document.getElementById('logout-btn').addEventListener('click', async () => {
-  await db.auth.signOut();
-  location.reload();
-});
-
 // ============================================================
 // 2. NAVIGATION & TAB ROUTING
 // ============================================================
