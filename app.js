@@ -25,20 +25,6 @@ function showToast(msg) {
   box.appendChild(item);
   setTimeout(() => item.remove(), 3500);
 }
-function showTableLoader(tbodyId, colSpan, label = 'ডাটা লোড হচ্ছে...') {
-  const el = document.getElementById(tbodyId);
-  if (!el) return;
-  el.innerHTML = `
-    <tr>
-      <td colspan="${colSpan}">
-        <div class="table-loader-box">
-          <div class="sa-spinner"></div>
-          <span>${label}</span>
-        </div>
-      </td>
-    </tr>
-  `;
-}
 function showGbLoader(text = 'ডেটা লোড হচ্ছে...') {
   const el = document.getElementById('gb-preloader');
   if (!el) return;
@@ -50,7 +36,7 @@ function showGbLoader(text = 'ডেটা লোড হচ্ছে...') {
 function hideGbLoader() {
   const el = document.getElementById('gb-preloader');
   if (!el) return;
-  setTimeout(() => el.classList.add('fade-out'), 220);
+  el.classList.add('fade-out');
 }
 // ============================================================
 // 1. AUTHENTICATION & ADMIN ROLE GUARD
