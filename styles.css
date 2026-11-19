@@ -504,63 +504,29 @@ body {
   .main-panel { padding: 16px; }
   .doughnut-layout { flex-direction: column; height: auto; padding: 12px 0; }
 }
-/* Account Recovery Modal */
+/* Reset Password Modal */
 .modal-backdrop {
   position: fixed;
   inset: 0;
-  background: rgba(15, 23, 42, 0.5);
-  backdrop-filter: blur(2px);
+  background: rgba(15, 23, 42, 0.55);
   display: flex;
   align-items: center;
   justify-content: center;
   padding: 16px;
   z-index: 2000;
 }
-
-.modal-box {
-  background: var(--bg-white);
+.modal-card {
+  background: #FFFFFF;
   width: 100%;
-  max-width: 460px;
+  max-width: 430px;
   border-radius: 16px;
   padding: 24px;
-  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.18);
-  border: 1px solid var(--border-light);
+  box-shadow: 0 20px 35px rgba(0, 0, 0, 0.2);
 }
-
-.modal-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-  gap: 12px;
-  margin-bottom: 16px;
-}
-.modal-header h3 { font-size: 17px; font-weight: 700; color: var(--text-dark); }
-
-.lookup-row {
-  display: flex;
-  gap: 8px;
-}
-.lookup-row .sa-input { flex: 1; }
-
-.result-panel {
-  margin-top: 16px;
-  padding-top: 16px;
-  border-top: 1px solid var(--border-light);
-}
-
-.user-summary-card {
-  background: var(--bg-canvas);
-  padding: 14px;
+.user-info-card {
+  background: #F8FAFC;
+  border: 1px solid #E8ECEF;
   border-radius: 12px;
+  padding: 14px;
+  margin-top: 12px;
 }
-
-.summary-row {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  gap: 8px;
-  flex-wrap: wrap;
-}
-
-.mt-8 { margin-top: 8px; }
-.mt-16 { margin-top: 16px; }
