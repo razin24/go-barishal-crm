@@ -821,10 +821,22 @@ async function loadPromoCodes() {
       ? `${p.discount_value}% (Max ৳${p.max_discount || 0})`
       : `Flat ৳${p.discount_value}`;
 
+    const maxUses = p.max_uses_per_user ?? 1;
+    const isExpired = p.expires_at && new Date(p.expires_at) < new Date();
+    const expiryText = p.expires_at
+      ? `${isExpired ? 'Expired:' : 'Exp:'} ${new Date(p.expires_at).toLocaleDateString('en-GB')}`
+      : 'No Expiry';
+
     return `
       <tr>
-        <td><span class="trx-chip">${p.code}</span></td>
-        <td><strong>${discLabel}</strong><br/><span class="muted-text">Min Fare: ৳${p.min_fare || 0}</span></td>
+        <td>
+          <span class="trx-chip">${p.code}</span><br/>
+          <span class="status-badge sb-blue" style="margin-top:4px;">Limit: ${maxUses}/user</span>
+        </td>
+        <td>
+          <strong>${discLabel}</strong><br/>
+          <span class="muted-text">Min Fare: ৳${p.min_fare || 0} • ${expiryText}</span>
+        </td>
         <td>
           <label class="switch-toggle" title="Active / Inactive">
             <input type="checkbox" ${p.is_active ? 'checked' : ''} onchange="togglePromoCode('${p.id}', this.checked)" />
@@ -841,12 +853,15 @@ async function loadPromoCodes() {
 
 document.getElementById('promo-form').addEventListener('submit', async (e) => {
   e.preventDefault();
+  const expiresRaw = document.getElementById('promo-expires-at').value;
   const payload = {
     code: document.getElementById('promo-code').value.trim().toUpperCase(),
     discount_type: document.getElementById('promo-type').value,
     discount_value: parseFloat(document.getElementById('promo-value').value),
     max_discount: parseFloat(document.getElementById('promo-max').value) || 0,
     min_fare: parseFloat(document.getElementById('promo-min').value) || 0,
+    max_uses_per_user: parseInt(document.getElementById('promo-max-uses').value, 10) || 1,
+    expires_at: expiresRaw ? new Date(expiresRaw).toISOString() : null,
     is_active: true
   };
 
@@ -858,9 +873,10 @@ document.getElementById('promo-form').addEventListener('submit', async (e) => {
   showToast(`প্রোমো কোড ${payload.code} তৈরি হয়েছে!`);
   document.getElementById('promo-code').value = '';
   document.getElementById('promo-value').value = '';
+  document.getElementById('promo-max-uses').value = '1';
+  document.getElementById('promo-expires-at').value = '';
   loadPromoCodes();
 });
-
 async function togglePromoCode(id, isActive) {
   const { error } = await db.from('promo_codes').update({ is_active: isActive }).eq('id', id);
   if (error) return showToast('আপডেট ব্যর্থ হয়েছে');
