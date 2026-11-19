@@ -692,3 +692,164 @@ body.initial-boot .gb-preloader {
 @media (max-width: 560px) {
   .form-row-2 { grid-template-columns: 1fr; }
 }
+/* ============================================================
+   MOBILE APP-LIKE UX, TOUCH TARGETS & BOTTOM NAV
+   ============================================================ */
+.sidebar-backdrop,
+.mobile-bottom-nav {
+  display: none;
+}
+
+@media (max-width: 860px) {
+  .sidebar-backdrop.show {
+    display: block;
+    position: fixed;
+    inset: 0;
+    background: rgba(15, 23, 42, 0.45);
+    backdrop-filter: blur(2px);
+    z-index: 999;
+  }
+
+  .sidebar {
+    width: 265px !important;
+    z-index: 1001 !important;
+    background: #FFFFFF !important;
+  }
+
+  .main-panel {
+    padding: 14px 14px 86px !important; /* নিচের বটম নেভের জন্য জায়গা রাখা */
+  }
+
+  /* টপবার ও বাটনগুলো মোবাইলে সুন্দরভাবে সাজানো */
+  .topbar {
+    gap: 10px;
+    margin-bottom: 14px;
+  }
+
+  .greeting-box h1 {
+    font-size: 18px !important;
+  }
+
+  .topbar-right {
+    width: 100%;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  .date-chip {
+    display: none; /* মোবাইলে জায়গা বাঁচাতে তারিখ হাইড */
+  }
+
+  .sub-header-bar {
+    overflow-x: auto;
+    white-space: nowrap;
+    padding-bottom: 8px;
+  }
+
+  /* KPI কার্ডগুলো মোবাইলে ২ কলামে দেখানো */
+  .kpi-grid-6 {
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: 12px !important;
+  }
+
+  .metric-item {
+    background: #FFFFFF;
+    padding: 12px;
+    border-radius: 12px;
+    border: 1px solid var(--border-light);
+  }
+
+  .m-value {
+    font-size: 21px !important;
+  }
+
+  /* ফিল্টার ও সার্চ বক্স ফুল-উইডথ */
+  .filter-controls {
+    width: 100%;
+  }
+  .filter-controls .sa-input,
+  .filter-controls .sa-select {
+    width: 100% !important;
+    font-size: 16px; /* iOS/Android অটো-জুম বন্ধ করবে */
+  }
+
+  .form-group input,
+  .sa-input,
+  .sa-select {
+    font-size: 16px;
+  }
+
+  /* টেবিল স্মুথ হরাইজন্টাল স্ক্রল ও টাচ বাটন */
+  .sa-table th,
+  .sa-table td {
+    padding: 10px 8px;
+    font-size: 12.5px;
+    white-space: nowrap;
+  }
+
+  .btn-sm {
+    padding: 8px 11px;
+    font-size: 12px;
+  }
+
+  .floating-gear-btn {
+    bottom: 76px !important;
+    right: 16px !important;
+    width: 42px;
+    height: 42px;
+  }
+
+  .map-frame {
+    height: 380px !important;
+  }
+
+  /* ফিক্সড বটম নেভিগেশন বার */
+  .mobile-bottom-nav {
+    display: flex;
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 62px;
+    background: #FFFFFF;
+    border-top: 1px solid #E9D5FF;
+    box-shadow: 0 -4px 18px rgba(76, 29, 149, 0.08);
+    z-index: 990;
+    justify-content: space-around;
+    align-items: center;
+    padding: 4px 6px;
+  }
+
+  .m-nav-btn {
+    background: none;
+    border: none;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 3px;
+    color: var(--text-muted);
+    font-size: 11px;
+    font-weight: 600;
+    padding: 6px 10px;
+    border-radius: 10px;
+    cursor: pointer;
+    flex: 1;
+  }
+
+  .m-nav-btn svg {
+    width: 19px;
+    height: 19px;
+    stroke: currentColor;
+    fill: none;
+    stroke-width: 2;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+
+  .m-nav-btn.active {
+    color: var(--royal);
+    background: var(--royal-soft);
+  }
+}
