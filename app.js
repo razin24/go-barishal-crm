@@ -97,13 +97,12 @@ document.getElementById('login-form').addEventListener('submit', async (e) => {
   if (trap && trap.value !== '') return;
 
   // ৩. Cloudflare Turnstile CAPTCHA টোকেন চেক
-  const captchaToken = document.querySelector('[name="cf-turnstile-response"]')?.value;
+ const captchaToken = document.querySelector('[name="cf-turnstile-response"]')?.value;
   if (!captchaToken) {
     errBox.textContent = 'অনুগ্রহ করে নিচের নিরাপত্তা যাচাই (CAPTCHA) সম্পন্ন করুন।';
     errBox.classList.remove('hidden');
     return;
   }
-
   const email = document.getElementById('login-email').value.trim();
   const password = document.getElementById('login-password').value;
 
