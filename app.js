@@ -203,27 +203,15 @@ function switchTab(tabName) {
 }
 
 async function refreshCurrentTab() {
-  showGbLoader('ডেটা লোড হচ্ছে...');
-  try {
-    if (activeTab === 'promotions') await loadPromotionsAndAds();
-    if (activeTab === 'dashboard') await loadDashboard();
-    if (activeTab === 'map') initOrRefreshMap();
-    if (activeTab === 'drivers') await loadDrivers();
-    if (activeTab === 'payments') await loadPayments();
-    if (activeTab === 'rides') await loadRides();
-    if (activeTab === 'passengers') await loadPassengersAndReports();
-    if (activeTab === 'settings') await loadSettings();
-  } finally {
-    hideGbLoader();
-  }
+  if (activeTab === 'promotions') await loadPromotionsAndAds();
+  if (activeTab === 'dashboard') await loadDashboard();
+  if (activeTab === 'map') initOrRefreshMap();
+  if (activeTab === 'drivers') await loadDrivers();
+  if (activeTab === 'payments') await loadPayments();
+  if (activeTab === 'rides') await loadRides();
+  if (activeTab === 'passengers') await loadPassengersAndReports();
+  if (activeTab === 'settings') await loadSettings();
 }
-
-async function cacheProfiles() {
-  const { data } = await db.from('profiles').select('id, full_name, phone, role, status');
-  allProfilesMap = {};
-  (data || []).forEach((p) => { allProfilesMap[p.id] = p; });
-}
-
 // ============================================================
 // 3. DASHBOARD OVERVIEW & STARADMIN CHARTS
 // ============================================================
