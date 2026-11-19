@@ -19,12 +19,15 @@ let mapTimer = null;
 // Toast Notification
 function showToast(msg) {
   const box = document.getElementById('toast-container');
+  if (!box) return;
   const item = document.createElement('div');
   item.className = 'toast';
   item.textContent = msg;
   box.appendChild(item);
   setTimeout(() => item.remove(), 3500);
 }
+
+// Branded Preloader Helpers
 function showGbLoader(text = 'ডেটা লোড হচ্ছে...') {
   const el = document.getElementById('gb-preloader');
   if (!el) return;
@@ -38,6 +41,23 @@ function hideGbLoader() {
   if (!el) return;
   el.classList.add('fade-out');
 }
+
+// Table Spinner Loader
+function showTableLoader(tbodyId, colSpan, label = 'ডাটা লোড হচ্ছে...') {
+  const el = document.getElementById(tbodyId);
+  if (!el) return;
+  el.innerHTML = `
+    <tr>
+      <td colspan="${colSpan}">
+        <div class="table-loader-box">
+          <div class="sa-spinner"></div>
+          <span>${label}</span>
+        </div>
+      </td>
+    </tr>
+  `;
+}
+
 // ============================================================
 // 1. AUTHENTICATION & ADMIN ROLE GUARD
 // ============================================================
@@ -155,6 +175,7 @@ document.getElementById('logout-btn').addEventListener('click', async () => {
   await db.auth.signOut();
   location.reload();
 });
+
 // ============================================================
 // 2. NAVIGATION & TAB ROUTING
 // ============================================================
@@ -182,7 +203,7 @@ function switchTab(tabName) {
 }
 
 async function refreshCurrentTab() {
-  showGbLoader();
+  showGbLoader('ডেটা লোড হচ্ছে...');
   try {
     if (activeTab === 'promotions') await loadPromotionsAndAds();
     if (activeTab === 'dashboard') await loadDashboard();
@@ -195,6 +216,12 @@ async function refreshCurrentTab() {
   } finally {
     hideGbLoader();
   }
+}
+
+async function cacheProfiles() {
+  const { data } = await db.from('profiles').select('id, full_name, phone, role, status');
+  allProfilesMap = {};
+  (data || []).forEach((p) => { allProfilesMap[p.id] = p; });
 }
 
 // ============================================================
@@ -268,51 +295,55 @@ function renderStarAdminCharts(completedRides, bikeCnt, cngCnt, carCnt) {
     gmvData.push(dayTrips.reduce((s, r) => s + Number(r.final_fare || r.offered_fare || 0), 0));
   }
 
-  const barCtx = document.getElementById('ridesBarChart').getContext('2d');
-  if (barChartObj) barChartObj.destroy();
-  barChartObj = new Chart(barCtx, {
-    type: 'bar',
-    data: {
-      labels,
-      datasets: [{
-        label: 'Completed Rides',
-        data: counts,
-        backgroundColor: '#1F3BB3',
-        borderRadius: 6,
-        barThickness: 24
-      }]
-    },
-    options: {
-      responsive: true,
-      maintainAspectRatio: false,
-      plugins: { legend: { display: false } },
-      scales: {
-        x: { grid: { display: false } },
-        y: { beginAtZero: true, border: { display: false } }
+  const barEl = document.getElementById('ridesBarChart');
+  if (barEl && window.Chart) {
+    if (barChartObj) barChartObj.destroy();
+    barChartObj = new Chart(barEl.getContext('2d'), {
+      type: 'bar',
+      data: {
+        labels,
+        datasets: [{
+          label: 'Completed Rides',
+          data: counts,
+          backgroundColor: '#1F3BB3',
+          borderRadius: 6,
+          barThickness: 24
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: { legend: { display: false } },
+        scales: {
+          x: { grid: { display: false } },
+          y: { beginAtZero: true, border: { display: false } }
+        }
       }
-    }
-  });
+    });
+  }
 
-  const doughCtx = document.getElementById('fleetDoughnutChart').getContext('2d');
-  if (doughnutChartObj) doughnutChartObj.destroy();
+  const doughEl = document.getElementById('fleetDoughnutChart');
   const totalFleet = bikeCnt + cngCnt + carCnt || 1;
-  doughnutChartObj = new Chart(doughCtx, {
-    type: 'doughnut',
-    data: {
-      labels: ['Bike', 'CNG', 'Car'],
-      datasets: [{
-        data: [bikeCnt, cngCnt, carCnt],
-        backgroundColor: ['#1F3BB3', '#38BDF8', '#2DD4BF'],
-        borderWidth: 0
-      }]
-    },
-    options: {
-      cutout: '68%',
-      responsive: true,
-      maintainAspectRatio: false,
-      plugins: { legend: { display: false } }
-    }
-  });
+  if (doughEl && window.Chart) {
+    if (doughnutChartObj) doughnutChartObj.destroy();
+    doughnutChartObj = new Chart(doughEl.getContext('2d'), {
+      type: 'doughnut',
+      data: {
+        labels: ['Bike', 'CNG', 'Car'],
+        datasets: [{
+          data: [bikeCnt, cngCnt, carCnt],
+          backgroundColor: ['#1F3BB3', '#38BDF8', '#2DD4BF'],
+          borderWidth: 0
+        }]
+      },
+      options: {
+        cutout: '68%',
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: { legend: { display: false } }
+      }
+    });
+  }
 
   document.getElementById('fleet-legend').innerHTML = `
     <div class="legend-row"><span class="legend-dot" style="background:#1F3BB3"></span> Bike (${Math.round((bikeCnt / totalFleet) * 100)}%) — ${bikeCnt}</div>
@@ -320,33 +351,35 @@ function renderStarAdminCharts(completedRides, bikeCnt, cngCnt, carCnt) {
     <div class="legend-row"><span class="legend-dot" style="background:#2DD4BF"></span> Car (${Math.round((carCnt / totalFleet) * 100)}%) — ${carCnt}</div>
   `;
 
-  const lineCtx = document.getElementById('gmvLineChart').getContext('2d');
-  if (lineChartObj) lineChartObj.destroy();
-  lineChartObj = new Chart(lineCtx, {
-    type: 'line',
-    data: {
-      labels,
-      datasets: [{
-        label: 'Trip Fare GMV (৳)',
-        data: gmvData,
-        borderColor: '#1F3BB3',
-        backgroundColor: 'rgba(31, 59, 179, 0.08)',
-        fill: true,
-        tension: 0.4,
-        pointRadius: 4,
-        pointBackgroundColor: '#1F3BB3'
-      }]
-    },
-    options: {
-      responsive: true,
-      maintainAspectRatio: false,
-      plugins: { legend: { display: false } },
-      scales: {
-        x: { grid: { display: false } },
-        y: { beginAtZero: true }
+  const lineEl = document.getElementById('gmvLineChart');
+  if (lineEl && window.Chart) {
+    if (lineChartObj) lineChartObj.destroy();
+    lineChartObj = new Chart(lineEl.getContext('2d'), {
+      type: 'line',
+      data: {
+        labels,
+        datasets: [{
+          label: 'Trip Fare GMV (৳)',
+          data: gmvData,
+          borderColor: '#1F3BB3',
+          backgroundColor: 'rgba(31, 59, 179, 0.08)',
+          fill: true,
+          tension: 0.4,
+          pointRadius: 4,
+          pointBackgroundColor: '#1F3BB3'
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: { legend: { display: false } },
+        scales: {
+          x: { grid: { display: false } },
+          y: { beginAtZero: true }
+        }
       }
-    }
-  });
+    });
+  }
 }
 
 function renderTopPerformers(drivers) {
@@ -435,6 +468,7 @@ async function refreshMapData() {
 // 5. DRIVER MANAGEMENT
 // ============================================================
 async function loadDrivers() {
+  showTableLoader('drivers-tbody', 7, 'ড্রাইভার তালিকা লোড হচ্ছে...');
   await cacheProfiles();
   const { data, error } = await db.from('drivers').select('*').order('created_at', { ascending: false });
   if (error) return showToast('ড্রাইভার লোড ব্যর্থ হয়েছে: ' + error.message);
@@ -468,9 +502,9 @@ function renderDriversTable() {
 
     return `
       <tr>
-        <td><strong>${prof.full_name || 'N/A'}</strong> ${d.is_online ? '🟢' : '⚪'}<br/><span class="muted-text">${prof.phone || ''}</span></td>
+        <td><strong>${prof.full_name || 'N/A'}</strong> <span class="online-dot ${d.is_online ? 'on' : 'off'}"></span><br/><span class="muted-text">${prof.phone || ''}</span></td>
         <td><span class="status-badge sb-blue">${(d.vehicle_type || '').toUpperCase()}</span><br/>${d.vehicle_model || ''} (${d.vehicle_number || 'N/A'})</td>
-        <td>⭐ ${Number(d.rating_avg || 0).toFixed(1)} (${d.rating_count || 0})<br/><span class="muted-text">${d.total_rides || 0} রাইড • ৳${d.total_earnings || 0}</span></td>
+        <td>Rating: ${Number(d.rating_avg || 0).toFixed(1)} (${d.rating_count || 0})<br/><span class="muted-text">${d.total_rides || 0} রাইড • ৳${d.total_earnings || 0}</span></td>
         <td><strong>${d.free_rides_left ?? 0}</strong></td>
         <td><span class="status-badge ${validPass ? 'sb-green' : 'sb-red'}">${validPass ? exp.toLocaleDateString() : 'Expired'}</span></td>
         <td><span class="status-badge ${d.status === 'approved' ? 'sb-green' : 'sb-amber'}">${d.status}</span></td>
@@ -482,7 +516,7 @@ function renderDriversTable() {
             </button>
             <button class="btn btn-sm btn-royal" onclick="grantWeeklyPass('${d.id}', '${d.package_expires_at || ''}')">+7 Days</button>
             <button class="btn btn-sm btn-white" onclick="updateFreeRides('${d.id}', ${d.free_rides_left ?? 0})">Free Rides</button>
-            <button class="btn btn-sm btn-white" onclick="openResetModalForUser('${d.user_id || d.id}', '${(prof.full_name || '').replace(/'/g, '')}', 'driver', '${prof.phone || ''}')">🔑 Reset Pass</button>
+            <button class="btn btn-sm btn-white" onclick="openResetModalForUser('${d.user_id || d.id}', '${(prof.full_name || '').replace(/'/g, '')}', 'driver', '${prof.phone || ''}')">Reset Pass</button>
           </div>
         </td>
       </tr>
@@ -519,6 +553,7 @@ async function updateFreeRides(driverId, current) {
 // 6. BKASH WEEKLY PASS VERIFICATION (RPC)
 // ============================================================
 async function loadPayments() {
+  showTableLoader('payments-tbody', 6, 'বিকাশ পেমেন্ট রেকর্ড লোড হচ্ছে...');
   await cacheProfiles();
   const [payRes, drvRes] = await Promise.all([
     db.from('payments').select('*').order('submitted_at', { ascending: false }),
@@ -582,6 +617,7 @@ async function approvePaymentRpc(paymentId, decision) {
 // 7. RIDES & DISPATCH MONITOR
 // ============================================================
 async function loadRides() {
+  showTableLoader('rides-tbody', 7, 'রাইড তালিকা লোড হচ্ছে...');
   await cacheProfiles();
   const status = document.getElementById('ride-status-filter').value;
   let query = db.from('rides').select('*').order('created_at', { ascending: false }).limit(100);
@@ -603,7 +639,7 @@ async function loadRides() {
         <td><code>${r.otp || '—'}</code></td>
         <td>${r.passenger_name || 'N/A'}<br/><span class="muted-text">${r.passenger_phone || ''}</span></td>
         <td>${drvProf.full_name || 'Unassigned'}<br/><span class="muted-text">${drvProf.phone || ''}</span></td>
-        <td><span class="status-badge sb-blue">${r.status}</span> ${r.rating ? `<br/><small>⭐ ${r.rating}</small>` : ''}</td>
+        <td><span class="status-badge sb-blue">${r.status}</span> ${r.rating ? `<br/><small>Rating: ${r.rating}</small>` : ''}</td>
         <td>
           ${ongoing ? `
             <div class="btn-row">
@@ -638,6 +674,7 @@ function togglePassReport(type) {
 }
 
 async function loadPassengersAndReports() {
+  showTableLoader('passengers-tbody', 4, 'যাত্রী তালিকা লোড হচ্ছে...');
   const [profRes, ridesRes, repRes] = await Promise.all([
     db.from('profiles').select('*').eq('role', 'passenger'),
     db.from('rides').select('passenger_id'),
@@ -656,7 +693,7 @@ async function loadPassengersAndReports() {
         <span class="status-badge sb-green">${p.status || 'active'}</span>
         <button class="btn btn-sm btn-white" style="margin-left:8px"
           onclick="openResetModalForUser('${p.id}', '${(p.full_name || '').replace(/'/g, '')}', 'passenger', '${p.phone || ''}')">
-          🔑 Reset Pass
+          Reset Pass
         </button>
       </td>
     </tr>
@@ -804,6 +841,7 @@ async function loadPromotionsAndAds() {
 }
 
 async function loadAnnouncements() {
+  showTableLoader('announcements-tbody', 4, 'নোটিফিকেশন লোড হচ্ছে...');
   const { data, error } = await db
     .from('app_announcements')
     .select('*')
@@ -874,6 +912,7 @@ async function deleteAnnouncement(id) {
 }
 
 async function loadPromoCodes() {
+  showTableLoader('promos-tbody', 4, 'প্রোমো কোড লোড হচ্ছে...');
   const { data, error } = await db
     .from('promo_codes')
     .select('*')
