@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html lang="bn">
-<head>
+<head> 
+  <script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Go Barishal — Admin CRM</title>
@@ -34,6 +35,7 @@
           <label for="login-password">পাসওয়ার্ড</label>
           <input type="password" id="login-password" placeholder="••••••••" required />
         </div>
+        <div class="cf-turnstile" data-sitekey="YOUR_SITE_KEY" style="margin-bottom: 12px;"></div>
         <button type="submit" id="login-btn" class="btn btn-royal btn-block">সাইন ইন করুন</button>
       </form>
       <div id="login-error" class="error-box hidden"></div>
