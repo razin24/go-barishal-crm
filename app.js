@@ -112,8 +112,7 @@ document.getElementById('login-form').addEventListener('submit', async (e) => {
 
   const { data, error } = await db.auth.signInWithPassword({
     email,
-    password,
-    options: { captchaToken }
+    password
   });
 
   if (window.turnstile) turnstile.reset();
