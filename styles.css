@@ -1020,3 +1020,17 @@ body.initial-boot .gb-preloader {
   width: 100% !important;
   max-width: 100% !important;
 }
+/* ============================================================
+   MOBILE CLEAN TOPBAR (HIDE GB AVATAR & EXTRA PRINT BUTTON)
+   ============================================================ */
+@media (max-width: 860px) {
+  .avatar-circle,
+  .topbar-right .btn-white {
+    display: none !important;
+  }
+
+  .topbar-right {
+    justify-content: flex-start !important;
+    gap: 8px !important;
+  }
+}
