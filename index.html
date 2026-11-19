@@ -514,6 +514,15 @@
                     <label>সর্বনিম্ন ভাড়া শর্ত (Min Fare ৳)</label>
                     <input type="number" step="0.01" id="promo-min" class="sa-input" value="60" required />
                   </div>
+                  <div class="grid-2-col" style="gap:10px;">
+                  <div class="form-group">
+                    <label>প্রতি ইউজার সীমা (Max Uses/User)</label>
+                    <input type="number" min="1" id="promo-max-uses" class="sa-input" value="1" required />
+                  </div>
+                  <div class="form-group">
+                    <label>মেয়াদ (Expiry Date - ঐচ্ছিক)</label>
+                    <input type="datetime-local" id="promo-expires-at" class="sa-input" />
+                  </div>
                 </div>
                 <button type="submit" class="btn btn-success btn-block">➕ প্রোমো কোড তৈরি করুন</button>
               </form>
