@@ -39,6 +39,19 @@ function showTableLoader(tbodyId, colSpan, label = 'ডাটা লোড হ�
     </tr>
   `;
 }
+function showGbLoader(text = 'ডেটা লোড হচ্ছে...') {
+  const el = document.getElementById('gb-preloader');
+  if (!el) return;
+  const txt = el.querySelector('.gb-loader-text');
+  if (txt) txt.textContent = text;
+  el.classList.remove('fade-out');
+}
+
+function hideGbLoader() {
+  const el = document.getElementById('gb-preloader');
+  if (!el) return;
+  setTimeout(() => el.classList.add('fade-out'), 220);
+}
 // ============================================================
 // 1. AUTHENTICATION & ADMIN ROLE GUARD
 // ============================================================
@@ -49,8 +62,8 @@ document.addEventListener('DOMContentLoaded', async () => {
   if (session) {
     await verifyAdminSession(session.user.id);
   }
+  hideGbLoader();
 });
-
 document.getElementById('login-form').addEventListener('submit', async (e) => {
   e.preventDefault();
   const errBox = document.getElementById('login-error');
@@ -169,21 +182,20 @@ function switchTab(tabName) {
   refreshCurrentTab();
 }
 
-function refreshCurrentTab() {
-  if (activeTab === 'promotions') loadPromotionsAndAds();
-  if (activeTab === 'dashboard') loadDashboard();
-  if (activeTab === 'map') initOrRefreshMap();
-  if (activeTab === 'drivers') loadDrivers();
-  if (activeTab === 'payments') loadPayments();
-  if (activeTab === 'rides') loadRides();
-  if (activeTab === 'passengers') loadPassengersAndReports();
-  if (activeTab === 'settings') loadSettings();
-}
-
-async function cacheProfiles() {
-  const { data } = await db.from('profiles').select('id, full_name, phone, role, status');
-  allProfilesMap = {};
-  (data || []).forEach((p) => { allProfilesMap[p.id] = p; });
+async function refreshCurrentTab() {
+  showGbLoader();
+  try {
+    if (activeTab === 'promotions') await loadPromotionsAndAds();
+    if (activeTab === 'dashboard') await loadDashboard();
+    if (activeTab === 'map') initOrRefreshMap();
+    if (activeTab === 'drivers') await loadDrivers();
+    if (activeTab === 'payments') await loadPayments();
+    if (activeTab === 'rides') await loadRides();
+    if (activeTab === 'passengers') await loadPassengersAndReports();
+    if (activeTab === 'settings') await loadSettings();
+  } finally {
+    hideGbLoader();
+  }
 }
 
 // ============================================================
