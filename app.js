@@ -1,5 +1,5 @@
 // ============================================================
-// GO BARISHAL ADMIN CRM — SUPABASE & STARADMIN ENGINE
+// GO BARISHAL ADMIN CRM — SUPABASE & PURPLE BRAND ENGINE
 // ============================================================
 const SUPABASE_URL = 'https://bgtauxcgptxddbtbaxmx.supabase.co';
 const SUPABASE_ANON_KEY = 'sb_publishable_IZXzzBSjZzbFrqxnhhus9g_9myHECV8';
@@ -146,7 +146,6 @@ function bindWorkspaceForms() {
 }
 
 document.addEventListener('DOMContentLoaded', async () => {
-  // পুরোনো URL query parameter পরিষ্কার করা
   if (window.location.search) {
     window.history.replaceState({}, document.title, window.location.pathname);
   }
@@ -241,7 +240,6 @@ async function verifyAdminSession(userId) {
     return;
   }
 
-  // কেবল বৈধ অ্যাডমিন হলেই ড্যাশবোর্ড UI মাউন্ট হবে
   mountAdminWorkspace();
 
   const dateChip = document.getElementById('today-date-chip');
@@ -258,6 +256,7 @@ async function verifyAdminSession(userId) {
   await cacheProfiles();
   await loadDashboard();
 }
+
 // ============================================================
 // 2. NAVIGATION & TAB ROUTING
 // ============================================================
@@ -294,13 +293,15 @@ async function refreshCurrentTab() {
   if (activeTab === 'passengers') await loadPassengersAndReports();
   if (activeTab === 'settings') await loadSettings();
 }
+
 async function cacheProfiles() {
   const { data } = await db.from('profiles').select('id, full_name, phone, role, status');
   allProfilesMap = {};
   (data || []).forEach((p) => { allProfilesMap[p.id] = p; });
 }
+
 // ============================================================
-// 3. DASHBOARD OVERVIEW & STARADMIN CHARTS
+// 3. DASHBOARD OVERVIEW & PURPLE BRAND CHARTS
 // ============================================================
 async function loadDashboard() {
   await cacheProfiles();
@@ -380,7 +381,7 @@ function renderStarAdminCharts(completedRides, bikeCnt, cngCnt, carCnt) {
         datasets: [{
           label: 'Completed Rides',
           data: counts,
-          backgroundColor: '#1F3BB3',
+          backgroundColor: '#5B21B6',
           borderRadius: 6,
           barThickness: 24
         }]
@@ -407,7 +408,7 @@ function renderStarAdminCharts(completedRides, bikeCnt, cngCnt, carCnt) {
         labels: ['Bike', 'CNG', 'Car'],
         datasets: [{
           data: [bikeCnt, cngCnt, carCnt],
-          backgroundColor: ['#1F3BB3', '#38BDF8', '#2DD4BF'],
+          backgroundColor: ['#5B21B6', '#9333EA', '#14B8A6'],
           borderWidth: 0
         }]
       },
@@ -421,9 +422,9 @@ function renderStarAdminCharts(completedRides, bikeCnt, cngCnt, carCnt) {
   }
 
   document.getElementById('fleet-legend').innerHTML = `
-    <div class="legend-row"><span class="legend-dot" style="background:#1F3BB3"></span> Bike (${Math.round((bikeCnt / totalFleet) * 100)}%) — ${bikeCnt}</div>
-    <div class="legend-row"><span class="legend-dot" style="background:#38BDF8"></span> CNG (${Math.round((cngCnt / totalFleet) * 100)}%) — ${cngCnt}</div>
-    <div class="legend-row"><span class="legend-dot" style="background:#2DD4BF"></span> Car (${Math.round((carCnt / totalFleet) * 100)}%) — ${carCnt}</div>
+    <div class="legend-row"><span class="legend-dot" style="background:#5B21B6"></span> Bike (${Math.round((bikeCnt / totalFleet) * 100)}%) — ${bikeCnt}</div>
+    <div class="legend-row"><span class="legend-dot" style="background:#9333EA"></span> CNG (${Math.round((cngCnt / totalFleet) * 100)}%) — ${cngCnt}</div>
+    <div class="legend-row"><span class="legend-dot" style="background:#14B8A6"></span> Car (${Math.round((carCnt / totalFleet) * 100)}%) — ${carCnt}</div>
   `;
 
   const lineEl = document.getElementById('gmvLineChart');
@@ -436,12 +437,12 @@ function renderStarAdminCharts(completedRides, bikeCnt, cngCnt, carCnt) {
         datasets: [{
           label: 'Trip Fare GMV (৳)',
           data: gmvData,
-          borderColor: '#1F3BB3',
-          backgroundColor: 'rgba(31, 59, 179, 0.08)',
+          borderColor: '#5B21B6',
+          backgroundColor: 'rgba(91, 33, 182, 0.1)',
           fill: true,
           tension: 0.4,
           pointRadius: 4,
-          pointBackgroundColor: '#1F3BB3'
+          pointBackgroundColor: '#5B21B6'
         }]
       },
       options: {
@@ -511,14 +512,14 @@ async function refreshMapData() {
   ]);
 
   fleetLayer.clearLayers();
-  const palette = { bike: '#16A34A', cng: '#D97706', car: '#1F3BB3' };
+  const palette = { bike: '#16A34A', cng: '#D97706', car: '#5B21B6' };
 
   (drvRes.data || []).forEach((d) => {
     if (!d.lat || !d.lng) return;
     const prof = allProfilesMap[d.user_id] || allProfilesMap[d.id] || {};
     L.circleMarker([d.lat, d.lng], {
       radius: 9,
-      fillColor: palette[d.vehicle_type] || '#1F3BB3',
+      fillColor: palette[d.vehicle_type] || '#5B21B6',
       color: '#fff',
       weight: 2,
       fillOpacity: 0.92
@@ -809,30 +810,6 @@ async function loadSettings() {
   document.getElementById('set-support-phone').value = data.support_phone || '09638306861';
 }
 
-document.getElementById('settings-form').addEventListener('submit', async (e) => {
-  e.preventDefault();
-  const payload = {
-    id: 1,
-    bike_base_fare: parseFloat(document.getElementById('set-bike-base').value),
-    bike_per_km: parseFloat(document.getElementById('set-bike-km').value),
-    bike_min_fare: parseFloat(document.getElementById('set-bike-min').value),
-    cng_base_fare: parseFloat(document.getElementById('set-cng-base').value),
-    cng_per_km: parseFloat(document.getElementById('set-cng-km').value),
-    cng_min_fare: parseFloat(document.getElementById('set-cng-min').value),
-    car_base_fare: parseFloat(document.getElementById('set-car-base').value),
-    car_per_km: parseFloat(document.getElementById('set-car-km').value),
-    car_min_fare: parseFloat(document.getElementById('set-car-min').value),
-    weekly_pass_price: parseFloat(document.getElementById('set-weekly-price').value),
-    bkash_number: document.getElementById('set-bkash-num').value.trim(),
-    support_phone: document.getElementById('set-support-phone').value.trim(),
-    updated_at: new Date().toISOString()
-  };
-
-  const { error } = await db.from('public_settings').upsert(payload);
-  if (error) return showToast('সেভ ব্যর্থ: ' + error.message);
-  showToast('ভাড়া ও বিকাশ নম্বর সফলভাবে সেভ হয়েছে!');
-});
-
 // ============================================================
 // 10. ID LOOKUP & PASSWORD RESET MODAL (RPC)
 // ============================================================
@@ -953,25 +930,6 @@ async function loadAnnouncements() {
   `).join('') || '<tr><td colspan="4">কোনো নোটিফিকেশন বা বিজ্ঞাপন নেই।</td></tr>';
 }
 
-document.getElementById('announcement-form').addEventListener('submit', async (e) => {
-  e.preventDefault();
-  const payload = {
-    target_app: document.getElementById('ann-target').value,
-    badge_text: document.getElementById('ann-badge').value.trim(),
-    title: document.getElementById('ann-title').value.trim(),
-    message: document.getElementById('ann-message').value.trim(),
-    is_active: true
-  };
-
-  const { error } = await db.from('app_announcements').insert(payload);
-  if (error) return showToast('পাবলিশ ব্যর্থ: ' + error.message);
-
-  showToast('নতুন নোটিফিকেশন/বিজ্ঞাপন পাবলিশ হয়েছে!');
-  document.getElementById('ann-title').value = '';
-  document.getElementById('ann-message').value = '';
-  loadAnnouncements();
-});
-
 async function toggleAnnouncement(id, isActive) {
   const { error } = await db.from('app_announcements').update({ is_active: isActive }).eq('id', id);
   if (error) return showToast('আপডেট ব্যর্থ হয়েছে');
@@ -1029,33 +987,6 @@ async function loadPromoCodes() {
     `;
   }).join('') || '<tr><td colspan="4">কোনো প্রোমো কোড তৈরি করা হয়নি।</td></tr>';
 }
-
-document.getElementById('promo-form').addEventListener('submit', async (e) => {
-  e.preventDefault();
-  const expiresRaw = document.getElementById('promo-expires-at').value;
-  const payload = {
-    code: document.getElementById('promo-code').value.trim().toUpperCase(),
-    discount_type: document.getElementById('promo-type').value,
-    discount_value: parseFloat(document.getElementById('promo-value').value),
-    max_discount: parseFloat(document.getElementById('promo-max').value) || 0,
-    min_fare: parseFloat(document.getElementById('promo-min').value) || 0,
-    max_uses_per_user: parseInt(document.getElementById('promo-max-uses').value, 10) || 1,
-    expires_at: expiresRaw ? new Date(expiresRaw).toISOString() : null,
-    is_active: true
-  };
-
-  if (!payload.code) return showToast('প্রোমো কোড লিখুন');
-
-  const { error } = await db.from('promo_codes').insert(payload);
-  if (error) return showToast('প্রোমো তৈরি ব্যর্থ: ' + error.message);
-
-  showToast(`প্রোমো কোড ${payload.code} তৈরি হয়েছে!`);
-  document.getElementById('promo-code').value = '';
-  document.getElementById('promo-value').value = '';
-  document.getElementById('promo-max-uses').value = '1';
-  document.getElementById('promo-expires-at').value = '';
-  loadPromoCodes();
-});
 
 async function togglePromoCode(id, isActive) {
   const { error } = await db.from('promo_codes').update({ is_active: isActive }).eq('id', id);
