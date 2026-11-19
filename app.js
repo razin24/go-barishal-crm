@@ -218,13 +218,6 @@ document.getElementById('login-form').addEventListener('submit', async (e) => {
   const trap = document.getElementById('bot-trap');
   if (trap && trap.value !== '') return;
 
-  const turnstileEl = document.querySelector('.cf-turnstile');
-  const captchaToken = document.querySelector('[name="cf-turnstile-response"]')?.value;
-  if (turnstileEl && !captchaToken) {
-    errBox.textContent = 'অনুগ্রহ করে নিচের নিরাপত্তা যাচাই (CAPTCHA) সম্পন্ন করুন।';
-    errBox.classList.remove('hidden');
-    return;
-  }
 
   const email = document.getElementById('login-email').value.trim();
   const password = document.getElementById('login-password').value;
