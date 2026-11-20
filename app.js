@@ -528,9 +528,12 @@ function renderTopPerformers(drivers) {
 }
 
 // ============================================================
-// 4. LIVE BARISHAL FLEET MAP
+// 4. LIVE BARISHAL FLEET MAP & LAST-KNOWN RIDER TRACKER
 // ============================================================
-function initOrRefreshMap() {
+let driverMarkersMap = {};
+let allMapDriversCache = [];
+
+function initOrRefreshMap(targetDriverId = null) {
   if (!fleetMap) {
     fleetMap = L.map('barishal-map').setView([22.7010, 90.3535], 13);
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
@@ -539,50 +542,118 @@ function initOrRefreshMap() {
     fleetLayer = L.layerGroup().addTo(fleetMap);
   }
   setTimeout(() => fleetMap.invalidateSize(), 200);
-  refreshMapData();
+  refreshMapData(targetDriverId);
 
   if (mapTimer) clearInterval(mapTimer);
   mapTimer = setInterval(() => {
-    if (activeTab === 'map' && document.getElementById('auto-refresh-map').checked) {
+    const autoEl = document.getElementById('auto-refresh-map');
+    if (activeTab === 'map' && autoEl && autoEl.checked) {
       refreshMapData();
     }
   }, 5000);
 }
 
-async function refreshMapData() {
+async function refreshMapData(targetDriverId = null) {
   await cacheProfiles();
+  const showOffline = document.getElementById('show-offline-riders')?.checked ?? true;
+
   const [drvRes, rideRes] = await Promise.all([
-    db.from('drivers').select('*').eq('is_online', true),
+    db.from('drivers').select('*'),
     db.from('rides').select('*').in('status', ['searching', 'accepted', 'arrived', 'ongoing'])
   ]);
 
+  allMapDriversCache = drvRes.data || [];
+  const activeRides = rideRes.data || [];
+
+  // সার্চ সাজেশন লিস্ট আপডেট
+  const datalist = document.getElementById('map-riders-datalist');
+  if (datalist) {
+    datalist.innerHTML = allMapDriversCache.map((d) => {
+      const prof = allProfilesMap[d.user_id] || allProfilesMap[d.id] || {};
+      return `<option value="${prof.phone || d.vehicle_number || ''}">${prof.full_name || 'Rider'} (${(d.vehicle_type || '').toUpperCase()} - ${d.vehicle_number || 'N/A'})</option>`;
+    }).join('');
+  }
+
   fleetLayer.clearLayers();
+  driverMarkersMap = {};
   const palette = { bike: '#16A34A', cng: '#D97706', car: '#5B21B6' };
 
-  (drvRes.data || []).forEach((d) => {
+  allMapDriversCache.forEach((d) => {
     if (!d.lat || !d.lng) return;
+    if (!d.is_online && !showOffline) return;
+
     const prof = allProfilesMap[d.user_id] || allProfilesMap[d.id] || {};
-    L.circleMarker([d.lat, d.lng], {
-      radius: 9,
-      fillColor: palette[d.vehicle_type] || '#5B21B6',
-      color: '#fff',
-      weight: 2,
-      fillOpacity: 0.92
+    const ongoingRide = activeRides.find((r) => r.driver_id === d.id);
+    const isOnline = Boolean(d.is_online);
+    const pinColor = isOnline ? (palette[d.vehicle_type] || '#5B21B6') : '#64748B';
+    const lastSeen = d.last_heartbeat_at ? new Date(d.last_heartbeat_at).toLocaleString('en-GB') : 'অজানা';
+
+    const marker = L.circleMarker([d.lat, d.lng], {
+      radius: ongoingRide ? 11 : 9,
+      fillColor: pinColor,
+      color: ongoingRide ? '#DC2626' : '#FFFFFF',
+      weight: ongoingRide ? 3 : 2,
+      fillOpacity: isOnline ? 0.95 : 0.72
     }).bindPopup(`
-      <strong>${prof.full_name || 'Rider'}</strong> (${(d.vehicle_type || '').toUpperCase()})<br/>
-      ফোন: ${prof.phone || 'N/A'}<br/>
-      গাড়ি: ${d.vehicle_number || 'N/A'}<br/>
-      সর্বশেষ আপডেট: ${d.last_heartbeat_at ? new Date(d.last_heartbeat_at).toLocaleTimeString() : 'N/A'}
+      <div style="min-width:200px; line-height:1.5;">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px;">
+          <strong>${prof.full_name || 'Rider'}</strong>
+          <span style="font-size:11px; padding:2px 7px; border-radius:99px; background:${isOnline ? '#DCFCE7' : '#F1F5F9'}; color:${isOnline ? '#166534' : '#475569'}; font-weight:700;">
+            ${isOnline ? 'ONLINE' : 'OFFLINE'}
+          </span>
+        </div>
+        <div>গাড়ি: <strong>${(d.vehicle_type || '').toUpperCase()}</strong> (${d.vehicle_number || 'N/A'})</div>
+        <div>ফোন: <a href="tel:${prof.phone || ''}" style="color:#4C1D95; font-weight:700;">${prof.phone || 'N/A'}</a></div>
+        <div style="font-size:11.5px; color:#64748B; margin-top:3px;">সর্বশেষ সিগন্যাল: ${lastSeen}</div>
+        ${ongoingRide ? `
+          <div style="margin-top:6px; padding:6px; background:#FEF2F2; border-left:3px solid #DC2626; font-size:12px;">
+            <strong>চলমান রাইড (${ongoingRide.status}):</strong><br/>
+            যাত্রী: ${ongoingRide.passenger_name || 'N/A'} (${ongoingRide.passenger_phone || ''})<br/>
+            রুট: ${ongoingRide.pickup_area || ''} → ${ongoingRide.drop_area || ''}
+          </div>
+        ` : ''}
+      </div>
     `).addTo(fleetLayer);
+
+    driverMarkersMap[d.id] = { marker, lat: d.lat, lng: d.lng, driver: d, profile: prof };
   });
 
-  (rideRes.data || []).forEach((r) => {
+  // চলমান রাইডের পিকআপ পিন
+  activeRides.forEach((r) => {
     if (r.pickup_lat && r.pickup_lng) {
       L.marker([r.pickup_lat, r.pickup_lng])
-        .bindPopup(`<strong>রাইড (${r.status})</strong><br/>পিকআপ: ${r.pickup_area || r.pickup_text}<br/>যাত্রী: ${r.passenger_name || 'N/A'}`)
+        .bindPopup(`<strong>রাইড পিকআপ (${r.status})</strong><br/>স্থান: ${r.pickup_area || r.pickup_text}<br/>যাত্রী: ${r.passenger_name || 'N/A'} (${r.passenger_phone || ''})`)
         .addTo(fleetLayer);
     }
   });
+
+  if (targetDriverId && driverMarkersMap[targetDriverId]) {
+    const target = driverMarkersMap[targetDriverId];
+    fleetMap.setView([target.lat, target.lng], 16);
+    target.marker.openPopup();
+  }
+}
+
+function focusRiderOnMap(query) {
+  const q = (query || '').trim().toLowerCase();
+  if (!q) return showToast('রাইডারের ফোন নম্বর, নাম বা গাড়ির নম্বর লিখুন');
+
+  const foundEntry = Object.values(driverMarkersMap).find(({ driver, profile }) => {
+    const hay = `${profile.full_name || ''} ${profile.phone || ''} ${driver.vehicle_number || ''}`.toLowerCase();
+    return hay.includes(q);
+  });
+
+  if (!foundEntry) {
+    return showToast('ম্যাপে এই রাইডারের কোনো GPS লোকেশন পাওয়া যায়নি');
+  }
+
+  fleetMap.setView([foundEntry.lat, foundEntry.lng], 16);
+  foundEntry.marker.openPopup();
+}
+
+function trackDriverOnMap(driverId) {
+  switchTab('map');
+  setTimeout(() => initOrRefreshMap(driverId), 250);
 }
 
 // ============================================================
@@ -754,12 +825,11 @@ async function loadRides() {
     const ongoing = ['searching', 'accepted', 'arrived', 'ongoing'].includes(r.status);
 
     return `
-      <tr>
-        <td><strong>${r.pickup_area || r.pickup_text || ''}</strong> → <strong>${r.drop_area || r.drop_text || ''}</strong><br/><span class="muted-text">${new Date(r.created_at).toLocaleString()}</span></td>
-        <td>${r.distance_km || 0} km<br/><strong>৳${r.final_fare || r.offered_fare || 0}</strong></td>
-        <td><code>${r.otp || '—'}</code></td>
-        <td>${r.passenger_name || 'N/A'}<br/><span class="muted-text">${r.passenger_phone || ''}</span></td>
-        <td>${drvProf.full_name || 'Unassigned'}<br/><span class="muted-text">${drvProf.phone || ''}</span></td>
+      <td>
+          ${drvProf.full_name || 'Unassigned'}<br/>
+          <span class="muted-text">${drvProf.phone || ''}</span>
+          ${r.driver_id ? `<br/><button class="btn btn-sm btn-white" style="margin-top:4px;" onclick="trackDriverOnMap('${r.driver_id}')">📍 Track Rider</button>` : ''}
+        </td>
         <td><span class="status-badge sb-blue">${r.status}</span> ${r.rating ? `<br/><small>Rating: ${r.rating}</small>` : ''}</td>
         <td>
           ${ongoing ? `
