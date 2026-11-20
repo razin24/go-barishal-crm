@@ -209,23 +209,37 @@
             </div>
           </section>
 
-          <!-- TAB 2: LIVE MAP -->
+         <!-- TAB 2: LIVE MAP -->
           <section id="tab-map" class="tab-view">
             <div class="sa-card">
-              <div class="card-top">
-                <h3>বরিশাল লাইভ ফ্লিট ও রাইড ম্যাপ</h3>
-                <label class="muted-text"><input type="checkbox" id="auto-refresh-map" checked /> Auto-refresh (5s)</label>
+              <div class="card-top wrap-gap">
+                <div>
+                  <h3>বরিশাল লাইভ ফ্লিট ও রাইড ট্র্যাকার</h3>
+                  <span class="muted-text">যেকোনো রাইডারের নাম, ফোন বা নম্বর প্লেট লিখে লোকেশন খুঁজুন</span>
+                </div>
+                <div class="filter-controls">
+                  <input type="text" id="map-rider-search" class="sa-input" placeholder="রাইডার ফোন / নাম / নম্বর..." list="map-riders-datalist" onchange="focusRiderOnMap(this.value)" />
+                  <datalist id="map-riders-datalist"></datalist>
+                  <button type="button" class="btn btn-royal btn-sm" onclick="focusRiderOnMap(document.getElementById('map-rider-search').value)">খুঁজুন</button>
+                </div>
               </div>
-              <div class="map-legend-row">
-                <span><i class="dot bike"></i> Online Bike</span>
-                <span><i class="dot cng"></i> Online CNG</span>
-                <span><i class="dot car"></i> Online Car</span>
-                <span><i class="dot ride"></i> Active Ride Pickup</span>
+
+              <div class="map-legend-row" style="justify-content: space-between; align-items: center;">
+                <div style="display:flex; gap:14px; flex-wrap:wrap;">
+                  <span><i class="dot bike"></i> Online Bike</span>
+                  <span><i class="dot cng"></i> Online CNG</span>
+                  <span><i class="dot car"></i> Online Car</span>
+                  <span><i class="dot" style="background:#64748B;"></i> Offline (Last Known)</span>
+                  <span><i class="dot ride"></i> Active Ride</span>
+                </div>
+                <div style="display:flex; gap:14px; flex-wrap:wrap;">
+                  <label class="muted-text"><input type="checkbox" id="show-offline-riders" checked onchange="refreshMapData()" /> Show Offline</label>
+                  <label class="muted-text"><input type="checkbox" id="auto-refresh-map" checked /> Auto-refresh (5s)</label>
+                </div>
               </div>
               <div id="barishal-map" class="map-frame"></div>
             </div>
           </section>
-
           <!-- TAB 3: DRIVERS -->
           <section id="tab-drivers" class="tab-view">
             <div class="sa-card">
