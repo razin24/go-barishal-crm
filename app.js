@@ -16,6 +16,8 @@ let fleetMap = null;
 let fleetLayer = null;
 let mapTimer = null;
 let lockCountdownTimer = null;
+let driverMarkersMap = {};
+let allMapDriversCache = [];
 
 // Toast Notification
 function showToast(msg) {
@@ -218,7 +220,6 @@ document.getElementById('login-form').addEventListener('submit', async (e) => {
   const trap = document.getElementById('bot-trap');
   if (trap && trap.value !== '') return;
 
-
   const email = document.getElementById('login-email').value.trim();
   const password = document.getElementById('login-password').value;
 
@@ -328,6 +329,7 @@ function switchTab(tabName) {
 
   refreshCurrentTab();
 }
+
 async function refreshCurrentTab() {
   if (activeTab === 'promotions') await loadPromotionsAndAds();
   if (activeTab === 'dashboard') await loadDashboard();
@@ -426,7 +428,7 @@ function renderStarAdminCharts(completedRides, bikeCnt, cngCnt, carCnt) {
         datasets: [{
           label: 'Completed Rides',
           data: counts,
-          backgroundColor: '#5B21B6',
+          backgroundColor: '#4A148C',
           borderRadius: 6,
           barThickness: 24
         }]
@@ -453,7 +455,7 @@ function renderStarAdminCharts(completedRides, bikeCnt, cngCnt, carCnt) {
         labels: ['Bike', 'CNG', 'Car'],
         datasets: [{
           data: [bikeCnt, cngCnt, carCnt],
-          backgroundColor: ['#5B21B6', '#9333EA', '#14B8A6'],
+          backgroundColor: ['#4A148C', '#9333EA', '#14B8A6'],
           borderWidth: 0
         }]
       },
@@ -467,7 +469,7 @@ function renderStarAdminCharts(completedRides, bikeCnt, cngCnt, carCnt) {
   }
 
   document.getElementById('fleet-legend').innerHTML = `
-    <div class="legend-row"><span class="legend-dot" style="background:#5B21B6"></span> Bike (${Math.round((bikeCnt / totalFleet) * 100)}%) — ${bikeCnt}</div>
+    <div class="legend-row"><span class="legend-dot" style="background:#4A148C"></span> Bike (${Math.round((bikeCnt / totalFleet) * 100)}%) — ${bikeCnt}</div>
     <div class="legend-row"><span class="legend-dot" style="background:#9333EA"></span> CNG (${Math.round((cngCnt / totalFleet) * 100)}%) — ${cngCnt}</div>
     <div class="legend-row"><span class="legend-dot" style="background:#14B8A6"></span> Car (${Math.round((carCnt / totalFleet) * 100)}%) — ${carCnt}</div>
   `;
@@ -482,12 +484,12 @@ function renderStarAdminCharts(completedRides, bikeCnt, cngCnt, carCnt) {
         datasets: [{
           label: 'Trip Fare GMV (৳)',
           data: gmvData,
-          borderColor: '#5B21B6',
-          backgroundColor: 'rgba(91, 33, 182, 0.1)',
+          borderColor: '#4A148C',
+          backgroundColor: 'rgba(74, 20, 140, 0.1)',
           fill: true,
           tension: 0.4,
           pointRadius: 4,
-          pointBackgroundColor: '#5B21B6'
+          pointBackgroundColor: '#4A148C'
         }]
       },
       options: {
@@ -530,9 +532,6 @@ function renderTopPerformers(drivers) {
 // ============================================================
 // 4. LIVE BARISHAL FLEET MAP & LAST-KNOWN RIDER TRACKER
 // ============================================================
-let driverMarkersMap = {};
-let allMapDriversCache = [];
-
 function initOrRefreshMap(targetDriverId = null) {
   if (!fleetMap) {
     fleetMap = L.map('barishal-map').setView([22.7010, 90.3535], 13);
@@ -565,7 +564,6 @@ async function refreshMapData(targetDriverId = null) {
   allMapDriversCache = drvRes.data || [];
   const activeRides = rideRes.data || [];
 
-  // সার্চ সাজেশন লিস্ট আপডেট
   const datalist = document.getElementById('map-riders-datalist');
   if (datalist) {
     datalist.innerHTML = allMapDriversCache.map((d) => {
@@ -576,7 +574,7 @@ async function refreshMapData(targetDriverId = null) {
 
   fleetLayer.clearLayers();
   driverMarkersMap = {};
-  const palette = { bike: '#16A34A', cng: '#D97706', car: '#5B21B6' };
+  const palette = { bike: '#15803D', cng: '#B45309', car: '#4A148C' };
 
   allMapDriversCache.forEach((d) => {
     if (!d.lat || !d.lng) return;
@@ -585,28 +583,38 @@ async function refreshMapData(targetDriverId = null) {
     const prof = allProfilesMap[d.user_id] || allProfilesMap[d.id] || {};
     const ongoingRide = activeRides.find((r) => r.driver_id === d.id);
     const isOnline = Boolean(d.is_online);
-    const pinColor = isOnline ? (palette[d.vehicle_type] || '#5B21B6') : '#64748B';
+    const pinColor = isOnline ? (palette[d.vehicle_type] || '#4A148C') : '#64748B';
     const lastSeen = d.last_heartbeat_at ? new Date(d.last_heartbeat_at).toLocaleString('en-GB') : 'অজানা';
 
     const marker = L.circleMarker([d.lat, d.lng], {
       radius: ongoingRide ? 11 : 9,
       fillColor: pinColor,
-      color: ongoingRide ? '#DC2626' : '#FFFFFF',
+      color: ongoingRide ? '#B91C1C' : '#FFFFFF',
       weight: ongoingRide ? 3 : 2,
-      fillOpacity: isOnline ? 0.95 : 0.72
-    }).bindPopup(`
-      <div style="min-width:200px; line-height:1.5;">
+      fillOpacity: isOnline ? 0.95 : 0.72,
+      className: ongoingRide ? 'active-ride-pulse' : ''
+    });
+
+    if (ongoingRide) {
+      marker.bindTooltip(
+        `${prof.full_name || 'Rider'} → ${ongoingRide.passenger_name || 'Passenger'} (${ongoingRide.status})`,
+        { permanent: true, direction: 'top', offset: [0, -10], className: 'map-rider-tag' }
+      );
+    }
+
+    marker.bindPopup(`
+      <div style="min-width:205px; line-height:1.5;">
         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px;">
           <strong>${prof.full_name || 'Rider'}</strong>
-          <span style="font-size:11px; padding:2px 7px; border-radius:99px; background:${isOnline ? '#DCFCE7' : '#F1F5F9'}; color:${isOnline ? '#166534' : '#475569'}; font-weight:700;">
+          <span style="font-size:11px; padding:2px 7px; border-radius:99px; background:${isOnline ? '#DCFCE7' : '#F1F5F9'}; color:${isOnline ? '#14532D' : '#475569'}; font-weight:700;">
             ${isOnline ? 'ONLINE' : 'OFFLINE'}
           </span>
         </div>
         <div>গাড়ি: <strong>${(d.vehicle_type || '').toUpperCase()}</strong> (${d.vehicle_number || 'N/A'})</div>
-        <div>ফোন: <a href="tel:${prof.phone || ''}" style="color:#4C1D95; font-weight:700;">${prof.phone || 'N/A'}</a></div>
+        <div>ফোন: <a href="tel:${prof.phone || ''}" style="color:#4A148C; font-weight:700;">${prof.phone || 'N/A'}</a></div>
         <div style="font-size:11.5px; color:#64748B; margin-top:3px;">সর্বশেষ সিগন্যাল: ${lastSeen}</div>
         ${ongoingRide ? `
-          <div style="margin-top:6px; padding:6px; background:#FEF2F2; border-left:3px solid #DC2626; font-size:12px;">
+          <div style="margin-top:6px; padding:6px; background:#FEE2E2; border-left:3px solid #B91C1C; font-size:12px;">
             <strong>চলমান রাইড (${ongoingRide.status}):</strong><br/>
             যাত্রী: ${ongoingRide.passenger_name || 'N/A'} (${ongoingRide.passenger_phone || ''})<br/>
             রুট: ${ongoingRide.pickup_area || ''} → ${ongoingRide.drop_area || ''}
@@ -618,14 +626,57 @@ async function refreshMapData(targetDriverId = null) {
     driverMarkersMap[d.id] = { marker, lat: d.lat, lng: d.lng, driver: d, profile: prof };
   });
 
-  // চলমান রাইডের পিকআপ পিন
   activeRides.forEach((r) => {
+    const assignedDrv = r.driver_id ? driverMarkersMap[r.driver_id] : null;
+    const targetLat = r.status === 'ongoing' && r.drop_lat ? r.drop_lat : r.pickup_lat;
+    const targetLng = r.status === 'ongoing' && r.drop_lng ? r.drop_lng : r.pickup_lng;
+
     if (r.pickup_lat && r.pickup_lng) {
       L.marker([r.pickup_lat, r.pickup_lng])
-        .bindPopup(`<strong>রাইড পিকআপ (${r.status})</strong><br/>স্থান: ${r.pickup_area || r.pickup_text}<br/>যাত্রী: ${r.passenger_name || 'N/A'} (${r.passenger_phone || ''})`)
+        .bindPopup(`<strong>পিকআপ (${r.status})</strong><br/>স্থান: ${r.pickup_area || r.pickup_text}<br/>যাত্রী: ${r.passenger_name || 'N/A'} (${r.passenger_phone || ''})`)
         .addTo(fleetLayer);
     }
+
+    if (r.drop_lat && r.drop_lng) {
+      L.circleMarker([r.drop_lat, r.drop_lng], {
+        radius: 7,
+        fillColor: '#B91C1C',
+        color: '#FFFFFF',
+        weight: 2,
+        fillOpacity: 0.9
+      }).bindPopup(`<strong>গন্তব্য (Drop):</strong> ${r.drop_area || r.drop_text || ''}`).addTo(fleetLayer);
+    }
+
+    if (assignedDrv && targetLat && targetLng) {
+      L.polyline([[assignedDrv.lat, assignedDrv.lng], [targetLat, targetLng]], {
+        color: r.status === 'ongoing' ? '#15803D' : '#B91C1C',
+        weight: 3.5,
+        opacity: 0.85,
+        dashArray: '7, 7'
+      }).addTo(fleetLayer);
+    }
   });
+
+  const stripEl = document.getElementById('live-rides-strip');
+  if (stripEl) {
+    stripEl.innerHTML = activeRides.map((r) => {
+      const drvEntry = r.driver_id ? driverMarkersMap[r.driver_id] : null;
+      const riderName = drvEntry ? (drvEntry.profile.full_name || 'Rider') : 'রাইডার খোঁজা হচ্ছে...';
+      const clickAttr = drvEntry ? `onclick="trackDriverOnMap('${r.driver_id}')"` : (r.pickup_lat ? `onclick="fleetMap.setView([${r.pickup_lat}, ${r.pickup_lng}], 16)"` : '');
+
+      return `
+        <div class="live-ride-pill-card" ${clickAttr}>
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px;">
+            <span class="status-badge sb-red">${r.status.toUpperCase()}</span>
+            <strong>৳${r.final_fare || r.offered_fare || 0}</strong>
+          </div>
+          <div><strong>রাইডার:</strong> ${riderName}</div>
+          <div><strong>যাত্রী:</strong> ${r.passenger_name || 'N/A'} (${r.passenger_phone || ''})</div>
+          <div class="muted-text" style="margin-top:3px;">${r.pickup_area || ''} → ${r.drop_area || ''}</div>
+        </div>
+      `;
+    }).join('') || '<p class="muted-text" style="grid-column:1/-1;">এই মুহূর্তে কোনো রাইড চলমান নেই।</p>';
+  }
 
   if (targetDriverId && driverMarkersMap[targetDriverId]) {
     const target = driverMarkersMap[targetDriverId];
@@ -636,7 +687,7 @@ async function refreshMapData(targetDriverId = null) {
 
 function focusRiderOnMap(query) {
   const q = (query || '').trim().toLowerCase();
-  if (!q) return showToast('রাইডারের ফোন নম্বর, নাম বা গাড়ির নম্বর লিখুন');
+  if (!q) return showToast('রাইডারের ফোন নম্বর, নাম বা গাড়ির নম্বর লিখুন');
 
   const foundEntry = Object.values(driverMarkersMap).find(({ driver, profile }) => {
     const hay = `${profile.full_name || ''} ${profile.phone || ''} ${driver.vehicle_number || ''}`.toLowerCase();
@@ -644,7 +695,7 @@ function focusRiderOnMap(query) {
   });
 
   if (!foundEntry) {
-    return showToast('ম্যাপে এই রাইডারের কোনো GPS লোকেশন পাওয়া যায়নি');
+    return showToast('ম্যাপে এই রাইডারের কোনো GPS লোকেশন পাওয়া যায়নি');
   }
 
   fleetMap.setView([foundEntry.lat, foundEntry.lng], 16);
@@ -702,6 +753,7 @@ function renderDriversTable() {
         <td><span class="status-badge ${d.status === 'approved' ? 'sb-green' : 'sb-amber'}">${d.status}</span></td>
         <td>
           <div class="btn-row">
+            <button class="btn btn-sm btn-white" onclick="trackDriverOnMap('${d.id}')">Map</button>
             <button class="btn btn-sm ${d.status === 'approved' ? 'btn-danger' : 'btn-success'}"
               onclick="setDriverStatus('${d.id}', '${d.status === 'approved' ? 'suspended' : 'approved'}')">
               ${d.status === 'approved' ? 'Suspend' : 'Approve'}
@@ -825,10 +877,15 @@ async function loadRides() {
     const ongoing = ['searching', 'accepted', 'arrived', 'ongoing'].includes(r.status);
 
     return `
-      <td>
+      <tr>
+        <td><strong>${r.pickup_area || r.pickup_text || ''}</strong> → <strong>${r.drop_area || r.drop_text || ''}</strong><br/><span class="muted-text">${new Date(r.created_at).toLocaleString()}</span></td>
+        <td>${r.distance_km || 0} km<br/><strong>৳${r.final_fare || r.offered_fare || 0}</strong></td>
+        <td><code>${r.otp || '—'}</code></td>
+        <td>${r.passenger_name || 'N/A'}<br/><span class="muted-text">${r.passenger_phone || ''}</span></td>
+        <td>
           ${drvProf.full_name || 'Unassigned'}<br/>
           <span class="muted-text">${drvProf.phone || ''}</span>
-          ${r.driver_id ? `<br/><button class="btn btn-sm btn-white" style="margin-top:4px;" onclick="trackDriverOnMap('${r.driver_id}')">📍 Track Rider</button>` : ''}
+          ${r.driver_id ? `<br/><button class="btn btn-sm btn-white" style="margin-top:4px;" onclick="trackDriverOnMap('${r.driver_id}')">Track Rider</button>` : ''}
         </td>
         <td><span class="status-badge sb-blue">${r.status}</span> ${r.rating ? `<br/><small>Rating: ${r.rating}</small>` : ''}</td>
         <td>
