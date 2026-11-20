@@ -1593,3 +1593,50 @@ body.initial-boot .gb-preloader {
     grid-template-columns: 1fr;
   }
 }
+/* ============================================================
+   ACTIVE RIDE PULSE RING, LABELS & LIVE DISPATCH STRIP
+   ============================================================ */
+.active-ride-pulse {
+  animation: gbPinPulse 1.4s infinite;
+}
+
+@keyframes gbPinPulse {
+  0% { stroke-width: 3; stroke-opacity: 1; }
+  50% { stroke-width: 9; stroke-opacity: 0.35; }
+  100% { stroke-width: 3; stroke-opacity: 1; }
+}
+
+.map-rider-tag {
+  background: #1E1B4B !important;
+  color: #FFFFFF !important;
+  border: 1px solid #E1BEE7 !important;
+  border-radius: 6px !important;
+  padding: 2px 6px !important;
+  font-size: 11px !important;
+  font-weight: 600 !important;
+  box-shadow: 0 2px 8px rgba(15, 23, 42, 0.2) !important;
+}
+
+.live-rides-strip {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+  gap: 10px;
+  margin-top: 12px;
+}
+
+.live-ride-pill-card {
+  background: var(--bg-subtle);
+  border: 1px solid var(--border-light);
+  border-left: 4px solid var(--red);
+  border-radius: var(--radius-md);
+  padding: 10px 12px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  font-size: 12.5px;
+}
+
+.live-ride-pill-card:hover {
+  background: var(--royal-soft);
+  border-color: var(--royal-border);
+  transform: translateY(-1px);
+}
