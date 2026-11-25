@@ -5,6 +5,7 @@ const SUPABASE_URL = 'https://bgtauxcgptxddbtbaxmx.supabase.co';
 const SUPABASE_ANON_KEY = 'sb_publishable_IZXzzBSjZzbFrqxnhhus9g_9myHECV8';
 const db = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 const sb = db;
+
 let allDrivers = [];
 let allProfilesMap = {};
 let activeTab = 'dashboard';
@@ -17,8 +18,8 @@ let mapTimer = null;
 let lockCountdownTimer = null;
 let driverMarkersMap = {};
 let allMapDriversCache = [];
+let cachedAnnouncementsMap = {};
 
-// Toast Notification
 function showToast(msg) {
   const box = document.getElementById('toast-container');
   if (!box) return;
@@ -29,7 +30,6 @@ function showToast(msg) {
   setTimeout(() => item.remove(), 3500);
 }
 
-// Branded Preloader Helpers
 function showGbLoader(text = 'ডেটা লোড হচ্ছে...') {
   const el = document.getElementById('gb-preloader');
   if (!el) return;
@@ -44,7 +44,6 @@ function hideGbLoader() {
   el.classList.add('fade-out');
 }
 
-// Table Spinner Loader
 function showTableLoader(tbodyId, colSpan, label = 'ডাটা লোড হচ্ছে...') {
   const el = document.getElementById(tbodyId);
   if (!el) return;
@@ -59,6 +58,7 @@ function showTableLoader(tbodyId, colSpan, label = 'ডাটা লোড হ�
     </tr>
   `;
 }
+
 // ============================================================
 // 1. AUTHENTICATION, 5-MIN LOCKDOWN & ADMIN ROLE GUARD
 // ============================================================
@@ -140,7 +140,7 @@ function bindWorkspaceForms() {
     });
   }
 
-  // ১. আলাদা ইমেজ ব্যানার বিজ্ঞাপন ফর্ম (Carousel Banner Ad)
+  // ইমেজ ব্যানার বিজ্ঞাপন ফর্ম (শিডিউলসহ)
   const bannerForm = document.getElementById('banner-ad-form');
   const annImageInput = document.getElementById('ann-image-url');
   if (annImageInput) {
@@ -158,13 +158,18 @@ function bindWorkspaceForms() {
       const imageUrlRaw = document.getElementById('ann-image-url')?.value.trim() || '';
       if (!imageUrlRaw) return showToast('ব্যানার ছবির URL দিন');
 
+      const startsRaw = document.getElementById('banner-starts-at')?.value;
+      const expiresRaw = document.getElementById('banner-expires-at')?.value;
       const labelText = document.getElementById('banner-label')?.value.trim() || 'Promo Banner';
+
       const payload = {
         target_app: document.getElementById('banner-target').value,
         badge_text: 'BANNER_AD',
         title: labelText,
         message: labelText,
-        image_url: imageUrlRaw
+        image_url: imageUrlRaw,
+        starts_at: startsRaw ? new Date(startsRaw).toISOString() : new Date().toISOString(),
+        expires_at: expiresRaw ? new Date(expiresRaw).toISOString() : null
       };
 
       if (editId) {
@@ -175,7 +180,7 @@ function bindWorkspaceForms() {
         payload.is_active = true;
         const { error } = await db.from('app_announcements').insert(payload);
         if (error) return showToast('ব্যানার পাবলিশ ব্যর্থ: ' + error.message);
-        showToast('নতুন ইমেজ ব্যানার পাবলিশ হয়েছে!');
+        showToast('ইমেজ ব্যানার শিডিউল/পাবলিশ হয়েছে!');
       }
 
       resetBannerAdForm();
@@ -183,24 +188,31 @@ function bindWorkspaceForms() {
     });
   }
 
-  // ২. আলাদা টেক্সট নোটিফিকেশন ও নোটিশ ফর্ম (ছবি ছাড়া)
+  // টেক্সট নোটিফিকেশন ও নোটিশ ফর্ম (শিডিউলসহ)
   const annForm = document.getElementById('announcement-form');
   if (annForm) {
     annForm.addEventListener('submit', async (e) => {
       e.preventDefault();
+      const startsRaw = document.getElementById('ann-starts-at')?.value;
+      const expiresRaw = document.getElementById('ann-expires-at')?.value;
+
       const payload = {
         target_app: document.getElementById('ann-target').value,
         badge_text: document.getElementById('ann-badge').value.trim() || 'Notice',
         title: document.getElementById('ann-title').value.trim(),
         message: document.getElementById('ann-message').value.trim(),
         image_url: null,
+        starts_at: startsRaw ? new Date(startsRaw).toISOString() : new Date().toISOString(),
+        expires_at: expiresRaw ? new Date(expiresRaw).toISOString() : null,
         is_active: true
       };
       const { error } = await db.from('app_announcements').insert(payload);
       if (error) return showToast('পাবলিশ ব্যর্থ: ' + error.message);
-      showToast('নতুন টেক্সট নোটিফিকেশন পাবলিশ হয়েছে!');
+      showToast('টেক্সট নোটিফিকেশন শিডিউল/পাবলিশ হয়েছে!');
       document.getElementById('ann-title').value = '';
       document.getElementById('ann-message').value = '';
+      if (document.getElementById('ann-starts-at')) document.getElementById('ann-starts-at').value = '';
+      if (document.getElementById('ann-expires-at')) document.getElementById('ann-expires-at').value = '';
       loadAnnouncements();
     });
   }
@@ -333,6 +345,7 @@ async function verifyAdminSession(userId) {
   await cacheProfiles();
   await loadDashboard();
 }
+
 // ============================================================
 // 2. NAVIGATION & TAB ROUTING
 // ============================================================
@@ -572,7 +585,7 @@ function renderTopPerformers(drivers) {
 }
 
 // ============================================================
-// 4. LIVE BARISHAL FLEET MAP & LAST-KNOWN RIDER TRACKER
+// 4. LIVE BARISHAL FLEET MAP & ROAD-WISE TRACKER
 // ============================================================
 const routeGeometryCache = {};
 
@@ -589,9 +602,7 @@ async function fetchRoadRouteCoords(lat1, lng1, lat2, lng2) {
       routeGeometryCache[key] = coords;
       return coords;
     }
-  } catch (e) {
-    // নেটওয়ার্ক সমস্যা হলে ফলব্যাক হিসেবে স্ট্রেইট লাইন দেবে
-  }
+  } catch (e) {}
   return [[lat1, lng1], [lat2, lng2]];
 }
 
@@ -625,8 +636,6 @@ async function refreshMapData(targetDriverId = null) {
   ]);
 
   allMapDriversCache = drvRes.data || [];
-
-  // ১৫ মিনিটের বেশি পুরোনো stuck 'searching' রাইড বাদ দেওয়া
   const fifteenMinsAgo = Date.now() - 15 * 60 * 1000;
   const activeRides = (rideRes.data || []).filter((r) => {
     if (r.status === 'searching' && r.created_at) {
@@ -647,7 +656,6 @@ async function refreshMapData(targetDriverId = null) {
   driverMarkersMap = {};
   const palette = { bike: '#15803D', cng: '#B45309', car: '#4A148C' };
 
-  // ১. কেবল অনলাইন রাইডার, চলমান রাইডের রাইডার, অথবা সার্চ করা রাইডারকেই ম্যাপে দেখানো
   allMapDriversCache.forEach((d) => {
     if (!d.lat || !d.lng) return;
     const ongoingRide = activeRides.find((r) => r.driver_id === d.id);
@@ -700,7 +708,6 @@ async function refreshMapData(targetDriverId = null) {
     driverMarkersMap[d.id] = { marker, lat: d.lat, lng: d.lng, driver: d, profile: prof };
   });
 
-  // ২. আসল রাস্তা ধরে (Road-wise) পলিলাইন আঁকা
   for (const r of activeRides) {
     const assignedDrv = r.driver_id ? driverMarkersMap[r.driver_id] : null;
     const targetLat = r.status === 'ongoing' && r.drop_lat ? r.drop_lat : r.pickup_lat;
@@ -733,7 +740,6 @@ async function refreshMapData(targetDriverId = null) {
     }
   }
 
-  // ৩. ম্যাপের নিচে চলমান রাইডগুলোর কুইক কার্ড রেন্ডার
   const stripEl = document.getElementById('live-rides-strip');
   if (stripEl) {
     stripEl.innerHTML = activeRides.map((r) => {
@@ -783,6 +789,7 @@ function trackDriverOnMap(driverId) {
   switchTab('map');
   setTimeout(() => initOrRefreshMap(driverId), 250);
 }
+
 // ============================================================
 // 5. DRIVER MANAGEMENT
 // ============================================================
@@ -1134,10 +1141,32 @@ async function submitNewPassword() {
 }
 
 // ============================================================
+// 11. PROMO CODES, SCHEDULED BANNERS & APP NOTICES
 // ============================================================
-// 11. PROMO CODES & APP ANNOUNCEMENTS (ADS / NOTICES)
-// ============================================================
-let cachedAnnouncementsMap = {};
+function toLocalDatetimeInput(isoStr) {
+  if (!isoStr) return '';
+  const d = new Date(isoStr);
+  const offset = d.getTimezoneOffset() * 60000;
+  return new Date(d.getTime() - offset).toISOString().slice(0, 16);
+}
+
+function getScheduleStatusHtml(item) {
+  const now = Date.now();
+  const startMs = item.starts_at ? new Date(item.starts_at).getTime() : 0;
+  const endMs = item.expires_at ? new Date(item.expires_at).getTime() : null;
+
+  if (!item.is_active) {
+    return '<span class="status-badge sb-amber">Paused</span>';
+  }
+  if (startMs > now) {
+    return `<span class="status-badge sb-blue">Scheduled</span><div class="muted-text" style="font-size:11px;margin-top:2px;">শুরু: ${new Date(startMs).toLocaleString('en-GB', { dateStyle: 'short', timeStyle: 'short' })}</div>`;
+  }
+  if (endMs && endMs < now) {
+    return `<span class="status-badge sb-red">Expired</span><div class="muted-text" style="font-size:11px;margin-top:2px;">শেষ: ${new Date(endMs).toLocaleString('en-GB', { dateStyle: 'short', timeStyle: 'short' })}</div>`;
+  }
+  const endText = endMs ? `শেষ: ${new Date(endMs).toLocaleString('en-GB', { dateStyle: 'short', timeStyle: 'short' })}` : 'চলমান (No Expiry)';
+  return `<span class="status-badge sb-green">Live Now</span><div class="muted-text" style="font-size:11px;margin-top:2px;">${endText}</div>`;
+}
 
 function updateAnnouncementBannerPreview(rawUrl) {
   const url = (rawUrl || '').trim();
@@ -1191,6 +1220,8 @@ function editBannerAd(id) {
   document.getElementById('banner-target').value = item.target_app || 'passenger';
   document.getElementById('banner-label').value = item.title || '';
   document.getElementById('ann-image-url').value = item.image_url || '';
+  if (document.getElementById('banner-starts-at')) document.getElementById('banner-starts-at').value = toLocalDatetimeInput(item.starts_at);
+  if (document.getElementById('banner-expires-at')) document.getElementById('banner-expires-at').value = toLocalDatetimeInput(item.expires_at);
 
   const heading = document.getElementById('banner-form-heading');
   const submitBtn = document.getElementById('banner-submit-btn');
@@ -1208,6 +1239,8 @@ function resetBannerAdForm() {
   if (editIdEl) editIdEl.value = '';
   document.getElementById('banner-target').value = 'passenger';
   document.getElementById('banner-label').value = '';
+  if (document.getElementById('banner-starts-at')) document.getElementById('banner-starts-at').value = '';
+  if (document.getElementById('banner-expires-at')) document.getElementById('banner-expires-at').value = '';
   const imgUrlEl = document.getElementById('ann-image-url');
   if (imgUrlEl) imgUrlEl.value = '';
 
@@ -1245,7 +1278,6 @@ async function loadAnnouncements() {
     both: 'Both Apps'
   };
 
-  // ইমেজ ব্যানার এবং টেক্সট নোটিফিকেশন আলাদা করা
   const bannerItems = (data || []).filter((a) => a.badge_text === 'BANNER_AD' || Boolean(a.image_url));
   const noticeItems = (data || []).filter((a) => a.badge_text !== 'BANNER_AD' && !a.image_url);
 
@@ -1253,7 +1285,10 @@ async function loadAnnouncements() {
   if (bannerTbody) {
     bannerTbody.innerHTML = bannerItems.map((b) => `
       <tr>
-        <td><span class="status-badge sb-blue">${targetLabels[b.target_app] || b.target_app}</span></td>
+        <td>
+          <span class="status-badge sb-blue">${targetLabels[b.target_app] || b.target_app}</span>
+          <div style="margin-top:5px;">${getScheduleStatusHtml(b)}</div>
+        </td>
         <td>
           <strong>${b.title || 'Promo Banner'}</strong>
           ${b.image_url ? `<img src="${b.image_url}" alt="${b.title}" class="ann-thumb-mini" style="width:140px;" />` : ''}
@@ -1277,8 +1312,9 @@ async function loadAnnouncements() {
   document.getElementById('announcements-tbody').innerHTML = noticeItems.map((a) => `
     <tr>
       <td>
-        <span class="status-badge sb-blue">${targetLabels[a.target_app] || a.target_app}</span><br/>
-        <span class="status-badge sb-amber" style="margin-top:4px;">${a.badge_text || 'Notice'}</span>
+        <span class="status-badge sb-blue">${targetLabels[a.target_app] || a.target_app}</span>
+        <span class="status-badge sb-amber" style="margin-left:4px;">${a.badge_text || 'Notice'}</span>
+        <div style="margin-top:5px;">${getScheduleStatusHtml(a)}</div>
       </td>
       <td>
         <strong>${a.title}</strong><br/>
@@ -1301,6 +1337,7 @@ async function toggleAnnouncement(id, isActive) {
   const { error } = await db.from('app_announcements').update({ is_active: isActive }).eq('id', id);
   if (error) return showToast('আপডেট ব্যর্থ হয়েছে');
   showToast(isActive ? 'বিজ্ঞাপনটি চালু করা হয়েছে' : 'বিজ্ঞাপনটি সাময়িক বন্ধ (Paused) করা হয়েছে');
+  loadAnnouncements();
 }
 
 async function deleteAnnouncement(id) {
