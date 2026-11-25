@@ -59,7 +59,6 @@ function showTableLoader(tbodyId, colSpan, label = 'ডাটা লোড হ�
     </tr>
   `;
 }
-
 // ============================================================
 // 1. AUTHENTICATION, 5-MIN LOCKDOWN & ADMIN ROLE GUARD
 // ============================================================
@@ -142,21 +141,40 @@ function bindWorkspaceForms() {
   }
 
   const annForm = document.getElementById('announcement-form');
+  const annImageInput = document.getElementById('ann-image-url');
+  if (annImageInput) {
+    ['input', 'paste', 'change'].forEach((evt) => {
+      annImageInput.addEventListener(evt, () => {
+        setTimeout(() => updateAnnouncementBannerPreview(annImageInput.value), 0);
+      });
+    });
+  }
+
   if (annForm) {
     annForm.addEventListener('submit', async (e) => {
       e.preventDefault();
+      const editId = document.getElementById('ann-edit-id')?.value.trim();
+      const imageUrlRaw = document.getElementById('ann-image-url')?.value.trim() || '';
       const payload = {
         target_app: document.getElementById('ann-target').value,
         badge_text: document.getElementById('ann-badge').value.trim(),
         title: document.getElementById('ann-title').value.trim(),
         message: document.getElementById('ann-message').value.trim(),
-        is_active: true
+        image_url: imageUrlRaw || null
       };
-      const { error } = await db.from('app_announcements').insert(payload);
-      if (error) return showToast('পাবলিশ ব্যর্থ: ' + error.message);
-      showToast('নতুন নোটিফিকেশন/বিজ্ঞাপন পাবলিশ হয়েছে!');
-      document.getElementById('ann-title').value = '';
-      document.getElementById('ann-message').value = '';
+
+      if (editId) {
+        const { error } = await db.from('app_announcements').update(payload).eq('id', editId);
+        if (error) return showToast('আপডেট ব্যর্থ: ' + error.message);
+        showToast('বিজ্ঞাপন ও ব্যানার আপডেট হয়েছে!');
+      } else {
+        payload.is_active = true;
+        const { error } = await db.from('app_announcements').insert(payload);
+        if (error) return showToast('পাবলিশ ব্যর্থ: ' + error.message);
+        showToast('নতুন নোটিফিকেশন/বিজ্ঞাপন পাবলিশ হয়েছে!');
+      }
+
+      resetAnnouncementForm();
       loadAnnouncements();
     });
   }
@@ -289,7 +307,6 @@ async function verifyAdminSession(userId) {
   await cacheProfiles();
   await loadDashboard();
 }
-
 // ============================================================
 // 2. NAVIGATION & TAB ROUTING
 // ============================================================
@@ -1093,6 +1110,94 @@ async function submitNewPassword() {
 // ============================================================
 // 11. PROMO CODES & APP ANNOUNCEMENTS (ADS / NOTICES)
 // ============================================================
+let cachedAnnouncementsMap = {};
+
+function updateAnnouncementBannerPreview(rawUrl) {
+  const url = (rawUrl || '').trim();
+  const stage = document.getElementById('ann-preview-stage');
+  const placeholder = document.getElementById('ann-preview-placeholder');
+  const img = document.getElementById('ann-preview-img');
+  const errBox = document.getElementById('ann-preview-error');
+  const dimsBadge = document.getElementById('ann-preview-dims');
+
+  if (!stage || !placeholder || !img || !errBox || !dimsBadge) return;
+
+  if (!url) {
+    stage.classList.add('is-empty');
+    placeholder.classList.remove('hidden');
+    img.classList.add('hidden');
+    img.removeAttribute('src');
+    errBox.classList.add('hidden');
+    dimsBadge.textContent = 'No image URL';
+    dimsBadge.className = 'banner-dim-badge';
+    return;
+  }
+
+  stage.classList.remove('is-empty');
+  placeholder.classList.add('hidden');
+  errBox.classList.add('hidden');
+  dimsBadge.textContent = 'Loading...';
+  dimsBadge.className = 'banner-dim-badge';
+
+  img.onload = () => {
+    img.classList.remove('hidden');
+    errBox.classList.add('hidden');
+    dimsBadge.textContent = `Loaded: ${img.naturalWidth} × ${img.naturalHeight} px`;
+    dimsBadge.className = 'banner-dim-badge is-loaded';
+  };
+
+  img.onerror = () => {
+    img.classList.add('hidden');
+    errBox.classList.remove('hidden');
+    dimsBadge.textContent = 'Failed to load';
+    dimsBadge.className = 'banner-dim-badge is-error';
+  };
+
+  img.src = url;
+}
+
+function editAnnouncement(id) {
+  const item = cachedAnnouncementsMap[id];
+  if (!item) return;
+
+  document.getElementById('ann-edit-id').value = item.id;
+  document.getElementById('ann-target').value = item.target_app || 'both';
+  document.getElementById('ann-badge').value = item.badge_text || 'Notice';
+  document.getElementById('ann-title').value = item.title || '';
+  document.getElementById('ann-message').value = item.message || '';
+  document.getElementById('ann-image-url').value = item.image_url || '';
+
+  const heading = document.getElementById('ann-form-heading');
+  const submitBtn = document.getElementById('ann-submit-btn');
+  const cancelBtn = document.getElementById('ann-cancel-edit-btn');
+  if (heading) heading.textContent = 'বিজ্ঞাপন ও ব্যানার এডিট করুন';
+  if (submitBtn) submitBtn.textContent = 'আপডেট সেভ করুন';
+  if (cancelBtn) cancelBtn.classList.remove('hidden');
+
+  updateAnnouncementBannerPreview(item.image_url || '');
+  document.getElementById('announcement-form')?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+}
+
+function resetAnnouncementForm() {
+  const editIdEl = document.getElementById('ann-edit-id');
+  if (editIdEl) editIdEl.value = '';
+  document.getElementById('ann-target').value = 'both';
+  document.getElementById('ann-badge').value = 'Notice';
+  document.getElementById('ann-title').value = '';
+  document.getElementById('ann-message').value = '';
+  const imgUrlEl = document.getElementById('ann-image-url');
+  if (imgUrlEl) imgUrlEl.value = '';
+
+  const heading = document.getElementById('ann-form-heading');
+  const submitBtn = document.getElementById('ann-submit-btn');
+  const cancelBtn = document.getElementById('ann-cancel-edit-btn');
+  if (heading) heading.textContent = 'অ্যাপ নোটিফিকেশন ও ব্যানার বিজ্ঞাপন';
+  if (submitBtn) submitBtn.textContent = 'পাবলিশ করুন';
+  if (cancelBtn) cancelBtn.classList.add('hidden');
+
+  updateAnnouncementBannerPreview('');
+}
+
 async function loadPromotionsAndAds() {
   await Promise.all([loadAnnouncements(), loadPromoCodes()]);
 }
@@ -1105,6 +1210,9 @@ async function loadAnnouncements() {
     .order('created_at', { ascending: false });
 
   if (error) return showToast('নোটিফিকেশন লোড ব্যর্থ: ' + error.message);
+
+  cachedAnnouncementsMap = {};
+  (data || []).forEach((item) => { cachedAnnouncementsMap[item.id] = item; });
 
   const targetLabels = {
     passenger: 'Passenger App',
@@ -1121,6 +1229,7 @@ async function loadAnnouncements() {
       <td>
         <strong>${a.title}</strong><br/>
         <span class="muted-text">${a.message}</span>
+        ${a.image_url ? `<img src="${a.image_url}" alt="${a.title}" class="ann-thumb-mini" />` : ''}
       </td>
       <td>
         <label class="switch-toggle" title="Active / Pause">
@@ -1129,7 +1238,10 @@ async function loadAnnouncements() {
         </label>
       </td>
       <td>
-        <button class="btn btn-sm btn-danger" onclick="deleteAnnouncement('${a.id}')">Delete</button>
+        <div class="btn-row">
+          <button class="btn btn-sm btn-white" onclick="editAnnouncement('${a.id}')">Edit</button>
+          <button class="btn btn-sm btn-danger" onclick="deleteAnnouncement('${a.id}')">Delete</button>
+        </div>
       </td>
     </tr>
   `).join('') || '<tr><td colspan="4">কোনো নোটিফিকেশন বা বিজ্ঞাপন নেই।</td></tr>';
