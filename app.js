@@ -140,7 +140,8 @@ function bindWorkspaceForms() {
     });
   }
 
-  const annForm = document.getElementById('announcement-form');
+  // ১. আলাদা ইমেজ ব্যানার বিজ্ঞাপন ফর্ম (Carousel Banner Ad)
+  const bannerForm = document.getElementById('banner-ad-form');
   const annImageInput = document.getElementById('ann-image-url');
   if (annImageInput) {
     ['input', 'paste', 'change'].forEach((evt) => {
@@ -150,31 +151,56 @@ function bindWorkspaceForms() {
     });
   }
 
-  if (annForm) {
-    annForm.addEventListener('submit', async (e) => {
+  if (bannerForm) {
+    bannerForm.addEventListener('submit', async (e) => {
       e.preventDefault();
-      const editId = document.getElementById('ann-edit-id')?.value.trim();
+      const editId = document.getElementById('banner-edit-id')?.value.trim();
       const imageUrlRaw = document.getElementById('ann-image-url')?.value.trim() || '';
+      if (!imageUrlRaw) return showToast('ব্যানার ছবির URL দিন');
+
+      const labelText = document.getElementById('banner-label')?.value.trim() || 'Promo Banner';
       const payload = {
-        target_app: document.getElementById('ann-target').value,
-        badge_text: document.getElementById('ann-badge').value.trim(),
-        title: document.getElementById('ann-title').value.trim(),
-        message: document.getElementById('ann-message').value.trim(),
-        image_url: imageUrlRaw || null
+        target_app: document.getElementById('banner-target').value,
+        badge_text: 'BANNER_AD',
+        title: labelText,
+        message: labelText,
+        image_url: imageUrlRaw
       };
 
       if (editId) {
         const { error } = await db.from('app_announcements').update(payload).eq('id', editId);
-        if (error) return showToast('আপডেট ব্যর্থ: ' + error.message);
-        showToast('বিজ্ঞাপন ও ব্যানার আপডেট হয়েছে!');
+        if (error) return showToast('ব্যানার আপডেট ব্যর্থ: ' + error.message);
+        showToast('ইমেজ ব্যানার আপডেট হয়েছে!');
       } else {
         payload.is_active = true;
         const { error } = await db.from('app_announcements').insert(payload);
-        if (error) return showToast('পাবলিশ ব্যর্থ: ' + error.message);
-        showToast('নতুন নোটিফিকেশন/বিজ্ঞাপন পাবলিশ হয়েছে!');
+        if (error) return showToast('ব্যানার পাবলিশ ব্যর্থ: ' + error.message);
+        showToast('নতুন ইমেজ ব্যানার পাবলিশ হয়েছে!');
       }
 
-      resetAnnouncementForm();
+      resetBannerAdForm();
+      loadAnnouncements();
+    });
+  }
+
+  // ২. আলাদা টেক্সট নোটিফিকেশন ও নোটিশ ফর্ম (ছবি ছাড়া)
+  const annForm = document.getElementById('announcement-form');
+  if (annForm) {
+    annForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const payload = {
+        target_app: document.getElementById('ann-target').value,
+        badge_text: document.getElementById('ann-badge').value.trim() || 'Notice',
+        title: document.getElementById('ann-title').value.trim(),
+        message: document.getElementById('ann-message').value.trim(),
+        image_url: null,
+        is_active: true
+      };
+      const { error } = await db.from('app_announcements').insert(payload);
+      if (error) return showToast('পাবলিশ ব্যর্থ: ' + error.message);
+      showToast('নতুন টেক্সট নোটিফিকেশন পাবলিশ হয়েছে!');
+      document.getElementById('ann-title').value = '';
+      document.getElementById('ann-message').value = '';
       loadAnnouncements();
     });
   }
@@ -1108,6 +1134,7 @@ async function submitNewPassword() {
 }
 
 // ============================================================
+// ============================================================
 // 11. PROMO CODES & APP ANNOUNCEMENTS (ADS / NOTICES)
 // ============================================================
 let cachedAnnouncementsMap = {};
@@ -1156,43 +1183,39 @@ function updateAnnouncementBannerPreview(rawUrl) {
   img.src = url;
 }
 
-function editAnnouncement(id) {
+function editBannerAd(id) {
   const item = cachedAnnouncementsMap[id];
   if (!item) return;
 
-  document.getElementById('ann-edit-id').value = item.id;
-  document.getElementById('ann-target').value = item.target_app || 'both';
-  document.getElementById('ann-badge').value = item.badge_text || 'Notice';
-  document.getElementById('ann-title').value = item.title || '';
-  document.getElementById('ann-message').value = item.message || '';
+  document.getElementById('banner-edit-id').value = item.id;
+  document.getElementById('banner-target').value = item.target_app || 'passenger';
+  document.getElementById('banner-label').value = item.title || '';
   document.getElementById('ann-image-url').value = item.image_url || '';
 
-  const heading = document.getElementById('ann-form-heading');
-  const submitBtn = document.getElementById('ann-submit-btn');
-  const cancelBtn = document.getElementById('ann-cancel-edit-btn');
-  if (heading) heading.textContent = 'বিজ্ঞাপন ও ব্যানার এডিট করুন';
-  if (submitBtn) submitBtn.textContent = 'আপডেট সেভ করুন';
+  const heading = document.getElementById('banner-form-heading');
+  const submitBtn = document.getElementById('banner-submit-btn');
+  const cancelBtn = document.getElementById('banner-cancel-edit-btn');
+  if (heading) heading.textContent = 'ইমেজ ব্যানার এডিট করুন';
+  if (submitBtn) submitBtn.textContent = 'ব্যানার আপডেট করুন';
   if (cancelBtn) cancelBtn.classList.remove('hidden');
 
   updateAnnouncementBannerPreview(item.image_url || '');
-  document.getElementById('announcement-form')?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  document.getElementById('banner-ad-form')?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
 }
 
-function resetAnnouncementForm() {
-  const editIdEl = document.getElementById('ann-edit-id');
+function resetBannerAdForm() {
+  const editIdEl = document.getElementById('banner-edit-id');
   if (editIdEl) editIdEl.value = '';
-  document.getElementById('ann-target').value = 'both';
-  document.getElementById('ann-badge').value = 'Notice';
-  document.getElementById('ann-title').value = '';
-  document.getElementById('ann-message').value = '';
+  document.getElementById('banner-target').value = 'passenger';
+  document.getElementById('banner-label').value = '';
   const imgUrlEl = document.getElementById('ann-image-url');
   if (imgUrlEl) imgUrlEl.value = '';
 
-  const heading = document.getElementById('ann-form-heading');
-  const submitBtn = document.getElementById('ann-submit-btn');
-  const cancelBtn = document.getElementById('ann-cancel-edit-btn');
-  if (heading) heading.textContent = 'অ্যাপ নোটিফিকেশন ও ব্যানার বিজ্ঞাপন';
-  if (submitBtn) submitBtn.textContent = 'পাবলিশ করুন';
+  const heading = document.getElementById('banner-form-heading');
+  const submitBtn = document.getElementById('banner-submit-btn');
+  const cancelBtn = document.getElementById('banner-cancel-edit-btn');
+  if (heading) heading.textContent = 'ইমেজ ব্যানার বিজ্ঞাপন (App Carousel Banner)';
+  if (submitBtn) submitBtn.textContent = 'ব্যানার পাবলিশ করুন';
   if (cancelBtn) cancelBtn.classList.add('hidden');
 
   updateAnnouncementBannerPreview('');
@@ -1203,13 +1226,15 @@ async function loadPromotionsAndAds() {
 }
 
 async function loadAnnouncements() {
+  showTableLoader('banner-ads-tbody', 4, 'ব্যানার লোড হচ্ছে...');
   showTableLoader('announcements-tbody', 4, 'নোটিফিকেশন লোড হচ্ছে...');
+
   const { data, error } = await db
     .from('app_announcements')
     .select('*')
     .order('created_at', { ascending: false });
 
-  if (error) return showToast('নোটিফিকেশন লোড ব্যর্থ: ' + error.message);
+  if (error) return showToast('লোড ব্যর্থ: ' + error.message);
 
   cachedAnnouncementsMap = {};
   (data || []).forEach((item) => { cachedAnnouncementsMap[item.id] = item; });
@@ -1220,7 +1245,36 @@ async function loadAnnouncements() {
     both: 'Both Apps'
   };
 
-  document.getElementById('announcements-tbody').innerHTML = (data || []).map((a) => `
+  // ইমেজ ব্যানার এবং টেক্সট নোটিফিকেশন আলাদা করা
+  const bannerItems = (data || []).filter((a) => a.badge_text === 'BANNER_AD' || Boolean(a.image_url));
+  const noticeItems = (data || []).filter((a) => a.badge_text !== 'BANNER_AD' && !a.image_url);
+
+  const bannerTbody = document.getElementById('banner-ads-tbody');
+  if (bannerTbody) {
+    bannerTbody.innerHTML = bannerItems.map((b) => `
+      <tr>
+        <td><span class="status-badge sb-blue">${targetLabels[b.target_app] || b.target_app}</span></td>
+        <td>
+          <strong>${b.title || 'Promo Banner'}</strong>
+          ${b.image_url ? `<img src="${b.image_url}" alt="${b.title}" class="ann-thumb-mini" style="width:140px;" />` : ''}
+        </td>
+        <td>
+          <label class="switch-toggle" title="Active / Pause">
+            <input type="checkbox" ${b.is_active ? 'checked' : ''} onchange="toggleAnnouncement('${b.id}', this.checked)" />
+            <span class="switch-slider"></span>
+          </label>
+        </td>
+        <td>
+          <div class="btn-row">
+            <button class="btn btn-sm btn-white" onclick="editBannerAd('${b.id}')">Edit</button>
+            <button class="btn btn-sm btn-danger" onclick="deleteAnnouncement('${b.id}')">Delete</button>
+          </div>
+        </td>
+      </tr>
+    `).join('') || '<tr><td colspan="4">কোনো ইমেজ ব্যানার বিজ্ঞাপন নেই।</td></tr>';
+  }
+
+  document.getElementById('announcements-tbody').innerHTML = noticeItems.map((a) => `
     <tr>
       <td>
         <span class="status-badge sb-blue">${targetLabels[a.target_app] || a.target_app}</span><br/>
@@ -1229,7 +1283,6 @@ async function loadAnnouncements() {
       <td>
         <strong>${a.title}</strong><br/>
         <span class="muted-text">${a.message}</span>
-        ${a.image_url ? `<img src="${a.image_url}" alt="${a.title}" class="ann-thumb-mini" />` : ''}
       </td>
       <td>
         <label class="switch-toggle" title="Active / Pause">
@@ -1238,13 +1291,10 @@ async function loadAnnouncements() {
         </label>
       </td>
       <td>
-        <div class="btn-row">
-          <button class="btn btn-sm btn-white" onclick="editAnnouncement('${a.id}')">Edit</button>
-          <button class="btn btn-sm btn-danger" onclick="deleteAnnouncement('${a.id}')">Delete</button>
-        </div>
+        <button class="btn btn-sm btn-danger" onclick="deleteAnnouncement('${a.id}')">Delete</button>
       </td>
     </tr>
-  `).join('') || '<tr><td colspan="4">কোনো নোটিফিকেশন বা বিজ্ঞাপন নেই।</td></tr>';
+  `).join('') || '<tr><td colspan="4">কোনো টেক্সট নোটিফিকেশন নেই।</td></tr>';
 }
 
 async function toggleAnnouncement(id, isActive) {
