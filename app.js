@@ -563,6 +563,13 @@ async function refreshMapData(targetDriverId = null) {
 
   allMapDriversCache = drvRes.data || [];
   const activeRides = rideRes.data || [];
+  const fifteenMinsAgo = Date.now() - 15 * 60 * 1000;
+  const activeRides = (rideRes.data || []).filter((r) => {
+    if (r.status === 'searching' && r.created_at) {
+      return new Date(r.created_at).getTime() > fifteenMinsAgo;
+    }
+    return true;
+  });
 
   const datalist = document.getElementById('map-riders-datalist');
   if (datalist) {
