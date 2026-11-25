@@ -5,7 +5,6 @@ const SUPABASE_URL = 'https://bgtauxcgptxddbtbaxmx.supabase.co';
 const SUPABASE_ANON_KEY = 'sb_publishable_IZXzzBSjZzbFrqxnhhus9g_9myHECV8';
 const db = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 const sb = db;
-
 let allDrivers = [];
 let allProfilesMap = {};
 let activeTab = 'dashboard';
@@ -562,7 +561,8 @@ async function refreshMapData(targetDriverId = null) {
   ]);
 
   allMapDriversCache = drvRes.data || [];
-  const activeRides = rideRes.data || [];
+
+  // ১৫ মিনিটের বেশি পুরোনো stuck 'searching' রাইড বাদ দেওয়া
   const fifteenMinsAgo = Date.now() - 15 * 60 * 1000;
   const activeRides = (rideRes.data || []).filter((r) => {
     if (r.status === 'searching' && r.created_at) {
@@ -691,7 +691,6 @@ async function refreshMapData(targetDriverId = null) {
     target.marker.openPopup();
   }
 }
-
 function focusRiderOnMap(query) {
   const q = (query || '').trim().toLowerCase();
   if (!q) return showToast('রাইডারের ফোন নম্বর, নাম বা গাড়ির নম্বর লিখুন');
