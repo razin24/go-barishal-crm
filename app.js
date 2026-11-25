@@ -531,6 +531,27 @@ function renderTopPerformers(drivers) {
 // ============================================================
 // 4. LIVE BARISHAL FLEET MAP & LAST-KNOWN RIDER TRACKER
 // ============================================================
+const routeGeometryCache = {};
+
+async function fetchRoadRouteCoords(lat1, lng1, lat2, lng2) {
+  const key = `${Number(lat1).toFixed(4)},${Number(lng1).toFixed(4)}_${Number(lat2).toFixed(4)},${Number(lng2).toFixed(4)}`;
+  if (routeGeometryCache[key]) return routeGeometryCache[key];
+
+  try {
+    const url = `https://router.project-osrm.org/route/v1/driving/${lng1},${lat1};${lng2},${lat2}?overview=full&geometries=geojson`;
+    const res = await fetch(url);
+    const json = await res.json();
+    if (json.code === 'Ok' && json.routes && json.routes[0]) {
+      const coords = json.routes[0].geometry.coordinates.map(([lng, lat]) => [lat, lng]);
+      routeGeometryCache[key] = coords;
+      return coords;
+    }
+  } catch (e) {
+    // নেটওয়ার্ক সমস্যা হলে ফলব্যাক হিসেবে স্ট্রেইট লাইন দেবে
+  }
+  return [[lat1, lng1], [lat2, lng2]];
+}
+
 function initOrRefreshMap(targetDriverId = null) {
   if (!fleetMap) {
     fleetMap = L.map('barishal-map').setView([22.7010, 90.3535], 13);
@@ -553,7 +574,7 @@ function initOrRefreshMap(targetDriverId = null) {
 
 async function refreshMapData(targetDriverId = null) {
   await cacheProfiles();
-  const showOffline = document.getElementById('show-offline-riders')?.checked ?? true;
+  const showOffline = document.getElementById('show-offline-riders')?.checked ?? false;
 
   const [drvRes, rideRes] = await Promise.all([
     db.from('drivers').select('*'),
@@ -562,7 +583,7 @@ async function refreshMapData(targetDriverId = null) {
 
   allMapDriversCache = drvRes.data || [];
 
-  // ১৫ মিনিটের বেশি পুরোনো stuck 'searching' রাইড বাদ দেওয়া
+  // ১৫ মিনিটের বেশি পুরোনো stuck 'searching' রাইড বাদ দেওয়া
   const fifteenMinsAgo = Date.now() - 15 * 60 * 1000;
   const activeRides = (rideRes.data || []).filter((r) => {
     if (r.status === 'searching' && r.created_at) {
@@ -583,13 +604,16 @@ async function refreshMapData(targetDriverId = null) {
   driverMarkersMap = {};
   const palette = { bike: '#15803D', cng: '#B45309', car: '#4A148C' };
 
+  // ১. কেবল অনলাইন রাইডার, চলমান রাইডের রাইডার, অথবা সার্চ করা রাইডারকেই ম্যাপে দেখানো
   allMapDriversCache.forEach((d) => {
     if (!d.lat || !d.lng) return;
-    if (!d.is_online && !showOffline) return;
-
-    const prof = allProfilesMap[d.user_id] || allProfilesMap[d.id] || {};
     const ongoingRide = activeRides.find((r) => r.driver_id === d.id);
     const isOnline = Boolean(d.is_online);
+    const isTarget = targetDriverId && d.id === targetDriverId;
+
+    if (!isOnline && !ongoingRide && !showOffline && !isTarget) return;
+
+    const prof = allProfilesMap[d.user_id] || allProfilesMap[d.id] || {};
     const pinColor = isOnline ? (palette[d.vehicle_type] || '#4A148C') : '#64748B';
     const lastSeen = d.last_heartbeat_at ? new Date(d.last_heartbeat_at).toLocaleString('en-GB') : 'অজানা';
 
@@ -598,7 +622,7 @@ async function refreshMapData(targetDriverId = null) {
       fillColor: pinColor,
       color: ongoingRide ? '#B91C1C' : '#FFFFFF',
       weight: ongoingRide ? 3 : 2,
-      fillOpacity: isOnline ? 0.95 : 0.72,
+      fillOpacity: isOnline ? 0.95 : 0.75,
       className: ongoingRide ? 'active-ride-pulse' : ''
     });
 
@@ -633,7 +657,8 @@ async function refreshMapData(targetDriverId = null) {
     driverMarkersMap[d.id] = { marker, lat: d.lat, lng: d.lng, driver: d, profile: prof };
   });
 
-  activeRides.forEach((r) => {
+  // ২. আসল রাস্তা ধরে (Road-wise) পলিলাইন আঁকা
+  for (const r of activeRides) {
     const assignedDrv = r.driver_id ? driverMarkersMap[r.driver_id] : null;
     const targetLat = r.status === 'ongoing' && r.drop_lat ? r.drop_lat : r.pickup_lat;
     const targetLng = r.status === 'ongoing' && r.drop_lng ? r.drop_lng : r.pickup_lng;
@@ -655,15 +680,17 @@ async function refreshMapData(targetDriverId = null) {
     }
 
     if (assignedDrv && targetLat && targetLng) {
-      L.polyline([[assignedDrv.lat, assignedDrv.lng], [targetLat, targetLng]], {
-        color: r.status === 'ongoing' ? '#15803D' : '#B91C1C',
-        weight: 3.5,
-        opacity: 0.85,
-        dashArray: '7, 7'
+      const roadPath = await fetchRoadRouteCoords(assignedDrv.lat, assignedDrv.lng, targetLat, targetLng);
+      L.polyline(roadPath, {
+        color: r.status === 'ongoing' ? '#15803D' : '#4A148C',
+        weight: 4.5,
+        opacity: 0.9,
+        lineJoin: 'round'
       }).addTo(fleetLayer);
     }
-  });
+  }
 
+  // ৩. ম্যাপের নিচে চলমান রাইডগুলোর কুইক কার্ড রেন্ডার
   const stripEl = document.getElementById('live-rides-strip');
   if (stripEl) {
     stripEl.innerHTML = activeRides.map((r) => {
@@ -691,28 +718,28 @@ async function refreshMapData(targetDriverId = null) {
     target.marker.openPopup();
   }
 }
+
 function focusRiderOnMap(query) {
   const q = (query || '').trim().toLowerCase();
   if (!q) return showToast('রাইডারের ফোন নম্বর, নাম বা গাড়ির নম্বর লিখুন');
 
-  const foundEntry = Object.values(driverMarkersMap).find(({ driver, profile }) => {
-    const hay = `${profile.full_name || ''} ${profile.phone || ''} ${driver.vehicle_number || ''}`.toLowerCase();
+  const foundDriver = allMapDriversCache.find((d) => {
+    const prof = allProfilesMap[d.user_id] || allProfilesMap[d.id] || {};
+    const hay = `${prof.full_name || ''} ${prof.phone || ''} ${d.vehicle_number || ''}`.toLowerCase();
     return hay.includes(q);
   });
 
-  if (!foundEntry) {
+  if (!foundDriver || !foundDriver.lat || !foundDriver.lng) {
     return showToast('ম্যাপে এই রাইডারের কোনো GPS লোকেশন পাওয়া যায়নি');
   }
 
-  fleetMap.setView([foundEntry.lat, foundEntry.lng], 16);
-  foundEntry.marker.openPopup();
+  refreshMapData(foundDriver.id);
 }
 
 function trackDriverOnMap(driverId) {
   switchTab('map');
   setTimeout(() => initOrRefreshMap(driverId), 250);
 }
-
 // ============================================================
 // 5. DRIVER MANAGEMENT
 // ============================================================
