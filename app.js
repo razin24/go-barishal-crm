@@ -2,6 +2,8 @@
 // GO BARISHAL ADMIN CRM — SUPABASE & PURPLE BRAND ENGINE
 // ============================================================
 const SUPABASE_URL = 'https://bgtauxcgptxddbtbaxmx.supabase.co';
+YOUR_APPS_SCRIPT_WEB_APP_URL_HERE'
+const MKT_SHEET_API_URL = 'https://script.google.com/macros/s/AKfycbyL29E74kpQxb3_vjUu4CuZtWyUMLLxoC0ZqvIWIuo-PMT6tBXOt4_v7jSzFCQBlqCjEg/exec';
 const SUPABASE_ANON_KEY = 'sb_publishable_IZXzzBSjZzbFrqxnhhus9g_9myHECV8';
 const db = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 const sb = db;
@@ -250,23 +252,32 @@ function bindWorkspaceForms() {
   if (mktSpendForm) {
     mktSpendForm.addEventListener('submit', async (e) => {
       e.preventDefault();
-      const payload = {
-        campaign_name: document.getElementById('mkt-camp-name').value.trim(),
-        platform: document.getElementById('mkt-camp-platform').value,
-        spend_bdt: parseFloat(document.getElementById('mkt-camp-spend').value) || 0,
-        ad_reach: parseInt(document.getElementById('mkt-camp-reach').value, 10) || 0,
-        link_clicks: parseInt(document.getElementById('mkt-camp-clicks').value, 10) || 0,
-        notes: document.getElementById('mkt-camp-notes').value.trim()
-      };
-      const { error } = await db.from('marketing_campaigns').insert(payload);
-      if (error) return showToast('সেভ ব্যর্থ: ' + error.message);
-      showToast('মার্কেটিং খরচ ও ক্যাম্পেইন ডেটা সেভ হয়েছে!');
+      const btn = mktSpendForm.querySelector('button[type="submit"]');
+      btn.disabled = true;
+      btn.textContent = 'Google Sheet-এ সেভ হচ্ছে...';
+
+      await fetch(MKT_SHEET_API_URL, {
+        method: 'POST',
+        mode: 'no-cors',
+        headers: { 'Content-Type': 'text/plain' },
+        body: JSON.stringify({
+          action: 'add_campaign',
+          campaign_name: document.getElementById('mkt-camp-name').value.trim(),
+          platform: document.getElementById('mkt-camp-platform').value,
+          spend_bdt: parseFloat(document.getElementById('mkt-camp-spend').value) || 0,
+          ad_reach: parseInt(document.getElementById('mkt-camp-reach').value, 10) || 0,
+          link_clicks: parseInt(document.getElementById('mkt-camp-clicks').value, 10) || 0,
+          notes: document.getElementById('mkt-camp-notes').value.trim()
+        })
+      });
+
+      btn.disabled = false;
+      btn.textContent = 'খরচ ও ডেটা সেভ করুন';
+      showToast('Google Sheet-এ মার্কেটিং ডেটা সেভ হয়েছে!');
       mktSpendForm.reset();
-      loadMarketingHub();
+      setTimeout(loadMarketingHub, 800);
     });
   }
-}
-
 document.addEventListener('DOMContentLoaded', async () => {
   if (window.location.search) {
     window.history.replaceState({}, document.title, window.location.pathname);
@@ -1482,19 +1493,29 @@ async function loadMarketingHub() {
   const sevenDaysAgo = new Date(now - 7 * 24 * 60 * 60 * 1000).toISOString();
   const thirtyDaysAgo = new Date(now - 30 * 24 * 60 * 60 * 1000).toISOString();
 
-  const [profRes, ridesRes, payRes, campRes, taskRes] = await Promise.all([
+  // ১. অ্যাপের রিয়েল ডাটা আসবে Supabase থেকে
+  const [profRes, ridesRes, payRes] = await Promise.all([
     db.from('profiles').select('id, created_at'),
     db.from('rides').select('status, final_fare, offered_fare, created_at'),
-    db.from('payments').select('amount, status'),
-    db.from('marketing_campaigns').select('*').order('created_at', { ascending: false }),
-    db.from('marketing_tasks').select('*').order('created_at', { ascending: true })
+    db.from('payments').select('amount, status')
   ]);
+
+  // ২. মার্কেটিং খরচ ও টাস্ক ডাটা আসবে Google Sheets থেকে
+  let sheetData = { campaigns: [], tasks: [] };
+  if (MKT_SHEET_API_URL && !MKT_SHEET_API_URL.includes('আপনার_লিংক')) {
+    try {
+      const res = await fetch(MKT_SHEET_API_URL);
+      sheetData = await res.json();
+    } catch (e) {
+      showToast('Google Sheet থেকে ডেটা লোড হতে সমস্যা হয়েছে');
+    }
+  }
 
   const profiles = profRes.data || [];
   const rides = ridesRes.data || [];
   const payments = payRes.data || [];
-  const campaigns = campRes.data || [];
-  const tasks = taskRes.data || [];
+  const campaigns = sheetData.campaigns || [];
+  const tasks = sheetData.tasks || [];
 
   const weeklyUsers = profiles.filter((p) => p.created_at && p.created_at >= sevenDaysAgo).length;
   const monthlyUsers = profiles.filter((p) => p.created_at && p.created_at >= thirtyDaysAgo).length;
@@ -1557,7 +1578,7 @@ async function loadMarketingHub() {
   if (tbody) {
     tbody.innerHTML = campaigns.map((c) => `
       <tr>
-        <td>${c.campaign_date || new Date(c.created_at).toLocaleDateString('en-GB')}</td>
+        <td>${c.campaign_date}</td>
         <td><strong>${c.campaign_name}</strong></td>
         <td><span class="status-badge sb-blue">${c.platform}</span></td>
         <td><strong>৳${c.spend_bdt}</strong></td>
@@ -1565,22 +1586,32 @@ async function loadMarketingHub() {
         <td class="muted-text">${c.notes || '—'}</td>
         <td><button class="btn btn-sm btn-danger" onclick="deleteMarketingCampaign('${c.id}')">Delete</button></td>
       </tr>
-    `).join('') || '<tr><td colspan="7">এখনো কোনো মার্কেটিং খরচ যোগ করা হয়নি।</td></tr>';
+    `).join('') || '<tr><td colspan="7">Google Sheet-এ এখনো কোনো মার্কেটিং খরচ যোগ করা হয়নি।</td></tr>';
   }
 }
 
 async function toggleMarketingTask(id, isDone) {
-  await db.from('marketing_tasks').update({ is_done: isDone }).eq('id', id);
-  loadMarketingHub();
+  await fetch(MKT_SHEET_API_URL, {
+    method: 'POST',
+    mode: 'no-cors',
+    headers: { 'Content-Type': 'text/plain' },
+    body: JSON.stringify({ action: 'toggle_task', id, is_done: isDone })
+  });
+  showToast('Google Sheet-এ টাস্ক আপডেট হয়েছে');
+  setTimeout(loadMarketingHub, 600);
 }
 
 async function deleteMarketingCampaign(id) {
-  if (!confirm('এই ক্যাম্পেইন রেকর্ডটি মুছে ফেলতে চান?')) return;
-  await db.from('marketing_campaigns').delete().eq('id', id);
-  showToast('ক্যাম্পেইন রেকর্ড মুছে ফেলা হয়েছে');
-  loadMarketingHub();
+  if (!confirm('Google Sheet থেকে এই রেকর্ডটি মুছে ফেলতে চান?')) return;
+  await fetch(MKT_SHEET_API_URL, {
+    method: 'POST',
+    mode: 'no-cors',
+    headers: { 'Content-Type': 'text/plain' },
+    body: JSON.stringify({ action: 'delete_campaign', id })
+  });
+  showToast('রেকর্ড মুছে ফেলা হয়েছে');
+  setTimeout(loadMarketingHub, 700);
 }
-
 function copyMktAsset(key) {
   const el = document.getElementById(`mkt-asset-${key}`);
   if (!el) return;
