@@ -1531,16 +1531,16 @@ async function loadMarketingHub() {
   const weeklyRides = completedRides.filter((r) => r.created_at && r.created_at >= sevenDaysAgo).length;
   const monthlyRides = completedRides.filter((r) => r.created_at && r.created_at >= thirtyDaysAgo).length;
 
-  // ১. আমার নিজস্ব আয় (শুধু Approved Weekly Pass) ও নেট লাভ
+  // ১. আমার নিজস্ব আয় (শুধু Approved Weekly Pass = ৳150) ও নেট লাভ
   const myPassIncome = payments
     .filter((p) => p.status === 'approved')
     .reduce((s, p) => s + Number(p.amount || 0), 0);
 
-  // ২. রাইডারদের আয় (সব সম্পন্ন রাইডের ভাড়া — ০% কমিশন)
+  // ২. রাইডারদের আয় (সব সম্পন্ন রাইডের ভাড়া = ৳726)
   const riderTotalGmv = completedRides
     .reduce((s, r) => s + Number(r.final_fare || r.offered_fare || 0), 0);
 
-  // ৩. মার্কেটিং খরচ ও নেট লাভ (আমার পাস আয় - মার্কেটিং খরচ)
+  // ৩. মার্কেটিং খরচ ও নেট লাভ
   const totalSpend = campaigns.reduce((s, c) => s + Number(c.spend_bdt || 0), 0);
   const totalClicks = campaigns.reduce((s, c) => s + Number(c.link_clicks || 0), 0);
   const netProfit = myPassIncome - totalSpend;
@@ -1554,11 +1554,16 @@ async function loadMarketingHub() {
   document.getElementById('mkt-total-spend').textContent = `৳${totalSpend.toLocaleString()}`;
   document.getElementById('mkt-budget-rem').textContent = `বাজেট বাকি: ৳${budgetLeft.toLocaleString()}`;
 
-  // আলাদাভাবে আমার পাস লাভ এবং রাইডারদের আয় দেখানো
-  document.getElementById('mkt-pass-profit').textContent = `৳${myPassIncome.toLocaleString()}`;
-  document.getElementById('mkt-net-roi').textContent = `নেট লাভ (খরচ বাদে): ৳${netProfit.toLocaleString()}`;
-  document.getElementById('mkt-rider-gmv').textContent = `৳${riderTotalGmv.toLocaleString()}`;
-  document.getElementById('mkt-cpa-ctr').textContent = `CPA: ৳${cpa} • ক্লিক: ${totalClicks}`;
+  // নতুন কার্ডের ID-তে আলাদাভাবে ডাটা বসানো
+  const passEl = document.getElementById('mkt-pass-profit');
+  const roiEl = document.getElementById('mkt-net-roi');
+  const gmvEl = document.getElementById('mkt-rider-gmv');
+  const cpaEl = document.getElementById('mkt-cpa-ctr');
+
+  if (passEl) passEl.textContent = `৳${myPassIncome.toLocaleString()}`;
+  if (roiEl) roiEl.textContent = `নেট লাভ (খরচ বাদে): ৳${netProfit.toLocaleString()}`;
+  if (gmvEl) gmvEl.textContent = `৳${riderTotalGmv.toLocaleString()}`;
+  if (cpaEl) cpaEl.textContent = `CPA: ৳${cpa} • ক্লিক: ${totalClicks}`;
 
   const setBar = (txtId, barId, val, max, prefix = '') => {
     const pct = Math.min(100, Math.round((val / max) * 100));
@@ -1605,7 +1610,6 @@ async function loadMarketingHub() {
     `).join('') || '<tr><td colspan="7">Google Sheet-এ এখনো কোনো মার্কেটিং খরচ যোগ করা হয়নি।</td></tr>';
   }
 }
-
 async function toggleMarketingTask(id, isDone) {
   await fetch(MKT_SHEET_API_URL, {
     method: 'POST',
