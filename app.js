@@ -393,12 +393,14 @@ function initSidebarEvents() {
 function switchTab(tabName) {
   if (isMarketingHubOpen) {
     isMarketingHubOpen = false;
-    const opsView = document.querySelector('.main-shell > .content-area:not(#marketing-workspace-view)');
+    const opsView = document.querySelector('.main-panel > .content-body:not(#marketing-workspace-view)');
     const mktView = document.getElementById('marketing-workspace-view');
     const btn = document.getElementById('toggle-marketing-hub-btn');
+    const lbl = document.getElementById('gb-hub-btn-label');
     if (mktView) mktView.classList.add('hidden');
     if (opsView) opsView.classList.remove('hidden');
-    if (btn) btn.innerHTML = '<span>Marketing Hub</span>';
+    if (btn) btn.classList.remove('is-active');
+    if (lbl) lbl.textContent = 'Marketing Hub';
   }
 
   activeTab = tabName;
@@ -1444,21 +1446,33 @@ async function deletePromoCode(id) {
 // ============================================================
 function toggleMarketingWorkspace() {
   isMarketingHubOpen = !isMarketingHubOpen;
-  const opsView = document.querySelector('.main-panel > .content-area:not(#marketing-workspace-view)');
+  const opsView = document.querySelector('.main-panel > .content-body:not(#marketing-workspace-view)');
   const mktView = document.getElementById('marketing-workspace-view');
   const btn = document.getElementById('toggle-marketing-hub-btn');
+  const lbl = document.getElementById('gb-hub-btn-label');
 
   if (!opsView || !mktView) return;
 
   if (isMarketingHubOpen) {
     opsView.classList.add('hidden');
     mktView.classList.remove('hidden');
-    if (btn) btn.innerHTML = '<span>← Operations CRM</span>';
+    // প্রতিবার ওপেন হওয়ার সময় নতুন করে অ্যানিমেশন চালানো
+    mktView.classList.remove('mkt-screen-animate');
+    void mktView.offsetWidth;
+    mktView.classList.add('mkt-screen-animate');
+
+    if (btn) btn.classList.add('is-active');
+    if (lbl) lbl.textContent = '← Operations CRM';
     loadMarketingHub();
   } else {
     mktView.classList.add('hidden');
     opsView.classList.remove('hidden');
-    if (btn) btn.innerHTML = '<span>Marketing Hub</span>';
+    opsView.classList.remove('mkt-screen-animate');
+    void opsView.offsetWidth;
+    opsView.classList.add('mkt-screen-animate');
+
+    if (btn) btn.classList.remove('is-active');
+    if (lbl) lbl.textContent = 'Marketing Hub';
     refreshCurrentTab();
   }
 }
