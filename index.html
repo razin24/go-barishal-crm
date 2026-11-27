@@ -691,7 +691,7 @@
             </div>
           </div>
         </div>
-          <!-- TAB 8: SETTINGS -->
+        <!-- TAB 8: SETTINGS -->
           <section id="tab-settings" class="tab-view">
             <div class="sa-card">
               <div class="card-top"><h3>ভাড়া ও অ্যাপ কনফিগারেশন</h3></div>
@@ -733,6 +733,186 @@
               </form>
             </div>
           </section>
+        </div>
+
+        <!-- DEDICATED MARKETING & GROWTH WORKSPACE (OUTSIDE MAIN .content-body) -->
+        <div id="marketing-workspace-view" class="content-body mkt-screen-animate hidden">
+          <div class="sa-card mb-20" style="background: linear-gradient(135deg, #3B0A75 0%, #5B21B6 100%); color: #FFFFFF; border: none;">
+            <div class="card-top" style="margin-bottom: 6px;">
+              <div>
+                <span class="status-badge" style="background: rgba(255,255,255,0.18); color: #FFFFFF;">EXECUTIVE GROWTH ENGINE</span>
+                <h2 style="margin: 8px 0 4px; font-size: 20px; color: #FFFFFF;">Go Barishal — Marketing &amp; Growth Command Center</h2>
+                <p style="margin: 0; font-size: 12.5px; color: rgba(255,255,255,0.85);">Your City. Your Ride. • সাপ্তাহিক ও মাসিক গ্রোথ, ৳১,০০০ টেস্ট বাজেট ROI এবং ৩০ দিনের অ্যাকশন ট্র্যাকার</p>
+              </div>
+              <button type="button" class="btn btn-white btn-sm" onclick="toggleMarketingWorkspace()">← Back to Operations CRM</button>
+            </div>
+          </div>
+
+          <!-- KPI CARDS: WEEKLY & MONTHLY GROWTH + SPEND VS EARNING -->
+          <div class="kpi-grid-5" style="margin-bottom: 18px;">
+            <div class="sa-card kpi-card kpi-purple">
+              <div class="kpi-label">সাপ্তাহিক গ্রোথ (৭ দিন)</div>
+              <div class="kpi-val" id="mkt-weekly-users">0</div>
+              <div class="kpi-sub" id="mkt-weekly-rides">0 টি সম্পন্ন রাইড</div>
+            </div>
+            <div class="sa-card kpi-card kpi-violet">
+              <div class="kpi-label">মাসিক গ্রোথ (৩০ দিন)</div>
+              <div class="kpi-val" id="mkt-monthly-users">0</div>
+              <div class="kpi-sub" id="mkt-monthly-rides">0 টি সম্পন্ন রাইড</div>
+            </div>
+            <div class="sa-card kpi-card kpi-amber">
+              <div class="kpi-label">মোট মার্কেটিং খরচ</div>
+              <div class="kpi-val" id="mkt-total-spend">৳0</div>
+              <div class="kpi-sub" id="mkt-budget-rem">টেস্ট বাজেট বাকি: ৳১,০০০</div>
+            </div>
+            <div class="sa-card kpi-card kpi-emerald">
+              <div class="kpi-label">মোট আয় (Pass + GMV)</div>
+              <div class="kpi-val" id="mkt-total-earning">৳0</div>
+              <div class="kpi-sub" id="mkt-net-roi">নেট ব্যালেন্স: ৳0</div>
+            </div>
+            <div class="sa-card kpi-card kpi-blue">
+              <div class="kpi-label">প্রতি ইউজার খরচ (CPA)</div>
+              <div class="kpi-val" id="mkt-cpa">৳0</div>
+              <div class="kpi-sub" id="mkt-ctr">মোট ক্লিক: 0</div>
+            </div>
+          </div>
+
+          <!-- TARGET PROGRESS & SPEND ENTRY -->
+          <div class="grid-2-col" style="margin-bottom: 18px;">
+            <div class="sa-card">
+              <div class="card-top">
+                <h3>মাসিক ও সাপ্তাহিক গ্রোথ টার্গেট</h3>
+                <span class="status-badge sb-blue">Barishal City (18–35)</span>
+              </div>
+              <div style="display:flex; flex-direction:column; gap:14px;">
+                <div>
+                  <div style="display:flex; justify-content:space-between; font-size:13px; font-weight:600; margin-bottom:5px;">
+                    <span>সাপ্তাহিক নতুন ইউজার টার্গেট (৫০ জন)</span>
+                    <span id="target-weekly-user-txt">0 / 50</span>
+                  </div>
+                  <div style="height:10px; background:#F1F5F9; border-radius:99px; overflow:hidden;">
+                    <div id="target-weekly-user-bar" style="height:100%; width:0%; background:#4A148C; transition:width 0.4s;"></div>
+                  </div>
+                </div>
+
+                <div>
+                  <div style="display:flex; justify-content:space-between; font-size:13px; font-weight:600; margin-bottom:5px;">
+                    <span>মাসিক নতুন ইউজার টার্গেট (২০০ জন)</span>
+                    <span id="target-monthly-user-txt">0 / 200</span>
+                  </div>
+                  <div style="height:10px; background:#F1F5F9; border-radius:99px; overflow:hidden;">
+                    <div id="target-monthly-user-bar" style="height:100%; width:0%; background:#7E22CE; transition:width 0.4s;"></div>
+                  </div>
+                </div>
+
+                <div>
+                  <div style="display:flex; justify-content:space-between; font-size:13px; font-weight:600; margin-bottom:5px;">
+                    <span>মাসিক সম্পন্ন রাইড টার্গেট (১৫০ রাইড)</span>
+                    <span id="target-monthly-ride-txt">0 / 150</span>
+                  </div>
+                  <div style="height:10px; background:#F1F5F9; border-radius:99px; overflow:hidden;">
+                    <div id="target-monthly-ride-bar" style="height:100%; width:0%; background:#15803D; transition:width 0.4s;"></div>
+                  </div>
+                </div>
+
+                <div>
+                  <div style="display:flex; justify-content:space-between; font-size:13px; font-weight:600; margin-bottom:5px;">
+                    <span>৳১,০০০ টেস্ট বাজেট ব্যবহার (ধাপ ১: ৳৪০০ | ধাপ ২: ৳৬০০)</span>
+                    <span id="target-budget-txt">৳0 / ৳1,000</span>
+                  </div>
+                  <div style="height:10px; background:#F1F5F9; border-radius:99px; overflow:hidden;">
+                    <div id="target-budget-bar" style="height:100%; width:0%; background:#D97706; transition:width 0.4s;"></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="sa-card">
+              <div class="card-top"><h3>মার্কেটিং খরচ ও অ্যাড ডেটা যোগ করুন</h3></div>
+              <form id="marketing-spend-form">
+                <div class="form-row-2">
+                  <div class="form-group">
+                    <label>ক্যাম্পেইনের নাম</label>
+                    <input type="text" id="mkt-camp-name" class="sa-input" placeholder="যেমন: Test Run 1 (Nothullabad)" required />
+                  </div>
+                  <div class="form-group">
+                    <label>প্ল্যাটফর্ম</label>
+                    <select id="mkt-camp-platform" class="sa-select">
+                      <option value="Facebook Ads">Facebook Ads</option>
+                      <option value="Poster / Print">Poster / Leaflet Print</option>
+                      <option value="Telegram / Organic">Telegram / Organic</option>
+                      <option value="Rider Bonus">Rider Referral / Bonus</option>
+                    </select>
+                  </div>
+                </div>
+                <div class="form-row-3">
+                  <div class="form-group">
+                    <label>খরচ (৳ টাকা)</label>
+                    <input type="number" id="mkt-camp-spend" class="sa-input" placeholder="400" required />
+                  </div>
+                  <div class="form-group">
+                    <label>Ad Reach</label>
+                    <input type="number" id="mkt-camp-reach" class="sa-input" value="0" />
+                  </div>
+                  <div class="form-group">
+                    <label>Link Clicks</label>
+                    <input type="number" id="mkt-camp-clicks" class="sa-input" value="0" />
+                  </div>
+                </div>
+                <div class="form-group">
+                  <label>ফলাফল নোট / A-B টেস্ট পর্যবেক্ষণ</label>
+                  <input type="text" id="mkt-camp-notes" class="sa-input" placeholder="যেমন: বাইক ও সিএনজি পোস্টারে ক্লিক বেশি এসেছে" />
+                </div>
+                <button type="submit" class="btn btn-royal btn-block">খরচ ও ডেটা সেভ করুন</button>
+              </form>
+            </div>
+          </div>
+
+          <!-- 30-DAY EXECUTION CHECKLIST & MARKETING TOOLS -->
+          <div class="grid-2-col" style="margin-bottom: 18px;">
+            <div class="sa-card">
+              <div class="card-top">
+                <h3>৩০ দিনের বাস্তবায়ন চেকলিস্ট (30-Day Action Plan)</h3>
+                <span class="status-badge sb-green" id="mkt-task-progress">0% Done</span>
+              </div>
+              <div id="marketing-tasks-list" style="display:flex; flex-direction:column; gap:10px;"></div>
+            </div>
+
+            <div class="sa-card">
+              <div class="card-top"><h3>অফিশিয়াল মার্কেটিং টুলকিট ও অ্যাড কপি</h3></div>
+              <div style="display:flex; flex-direction:column; gap:12px;">
+                <div style="padding:12px; background:#F8FAFC; border:1px solid #E2E8F0; border-radius:10px;">
+                  <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
+                    <strong>Facebook Primary Ad Caption</strong>
+                    <button type="button" class="btn btn-sm btn-white" onclick="copyMktAsset('fb-caption')">Copy Text</button>
+                  </div>
+                  <p id="mkt-asset-fb-caption" style="margin:0; font-size:12.5px; color:#334155; line-height:1.5;">বরিশালের মানুষের প্রতিদিনের যাতায়াত সহজ করতে শুরু হলো নতুন ডিজিটাল উদ্যোগ – Go Barishal। ভাড়া নিয়ে আর কোনো দরকষাকষি নয়—অ্যাপেই দেখুন স্বচ্ছ ও নির্ধারিত ভাড়া, আর বুক করুন দ্রুত বাইক ও সিএনজি রাইড। আজই ব্যবহার করুন: gobarishal.blogspot.com | টেলিগ্রাম: https://t.me/gobarishal_community | হেল্পলাইন: 09638306861</p>
+                </div>
+
+                <div class="form-row-2">
+                  <div style="padding:10px; background:#F3E5F5; border-radius:10px;">
+                    <div style="font-size:11px; font-weight:700; color:#4A148C;">BRAND COLORS &amp; LOGO</div>
+                    <div style="font-size:12px; margin-top:4px;">Royal Purple: <code>#3B0A75</code> / <code>#4A148C</code><br/>Banner Ratio: <code>1200 × 500 px</code></div>
+                  </div>
+                  <div style="padding:10px; background:#F0FDF4; border-radius:10px;">
+                    <div style="font-size:11px; font-weight:700; color:#15803D;">TARGET ZONES</div>
+                    <div style="font-size:12px; margin-top:4px;">নথুল্লাবাদ, রূপাতলী, চৌমাথা, সদর রোড, বটতলা (বয়স: ১৮–৩৫)</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- CAMPAIGN SPEND HISTORY TABLE -->
+          <div class="sa-card">
+            <div class="card-top"><h3>মার্কেটিং খরচ ও ক্যাম্পেইন হিস্ট্রি</h3></div>
+            <div class="table-wrap">
+              <table class="sa-table">
+                <thead><tr><th>তারিখ</th><th>ক্যাম্পেইন</th><th>প্ল্যাটফর্ম</th><th>খরচ (৳)</th><th>Reach / Clicks</th><th>নোট</th><th>ডিলিট</th></tr></thead>
+                <tbody id="marketing-campaigns-tbody"></tbody>
+              </table>
+            </div>
+          </div>
         </div>
       </main>
 
