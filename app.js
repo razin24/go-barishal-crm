@@ -3,7 +3,7 @@
 // ============================================================
 const SUPABASE_URL = 'https://bgtauxcgptxddbtbaxmx.supabase.co';
 const SUPABASE_ANON_KEY = 'sb_publishable_IZXzzBSjZzbFrqxnhhus9g_9myHECV8';
-const MKT_SHEET_API_URL = 'https://script.google.com/macros/s/আপনার_লিংক_এখানে/exec';
+const MKT_SHEET_API_URL = 'https://script.google.com/macros/s/AKfycbyL29E74kpQxb3_vjUu4CuZtWyUMLLxoC0ZqvIWIuo-PMT6tBXOt4_v7jSzFCQBlqCjEg/exec';
 const db = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 const sb = db;
 
@@ -1531,12 +1531,19 @@ async function loadMarketingHub() {
   const weeklyRides = completedRides.filter((r) => r.created_at && r.created_at >= sevenDaysAgo).length;
   const monthlyRides = completedRides.filter((r) => r.created_at && r.created_at >= thirtyDaysAgo).length;
 
+  // ১. আমার নিজস্ব আয় (শুধু Approved Weekly Pass) ও নেট লাভ
+  const myPassIncome = payments
+    .filter((p) => p.status === 'approved')
+    .reduce((s, p) => s + Number(p.amount || 0), 0);
+
+  // ২. রাইডারদের আয় (সব সম্পন্ন রাইডের ভাড়া — ০% কমিশন)
+  const riderTotalGmv = completedRides
+    .reduce((s, r) => s + Number(r.final_fare || r.offered_fare || 0), 0);
+
+  // ৩. মার্কেটিং খরচ ও নেট লাভ (আমার পাস আয় - মার্কেটিং খরচ)
   const totalSpend = campaigns.reduce((s, c) => s + Number(c.spend_bdt || 0), 0);
   const totalClicks = campaigns.reduce((s, c) => s + Number(c.link_clicks || 0), 0);
-  const passRevenue = payments.filter((p) => p.status === 'approved').reduce((s, p) => s + Number(p.amount || 0), 0);
-  const tripGmv = completedRides.reduce((s, r) => s + Number(r.final_fare || r.offered_fare || 0), 0);
-  const totalEarning = passRevenue + tripGmv;
-  const netBalance = totalEarning - totalSpend;
+  const netProfit = myPassIncome - totalSpend;
   const cpa = monthlyUsers > 0 ? Math.round(totalSpend / monthlyUsers) : 0;
   const budgetLeft = Math.max(0, 1000 - totalSpend);
 
@@ -1545,11 +1552,13 @@ async function loadMarketingHub() {
   document.getElementById('mkt-monthly-users').textContent = `+${monthlyUsers}`;
   document.getElementById('mkt-monthly-rides').textContent = `${monthlyRides} টি সম্পন্ন রাইড`;
   document.getElementById('mkt-total-spend').textContent = `৳${totalSpend.toLocaleString()}`;
-  document.getElementById('mkt-budget-rem').textContent = `টেস্ট বাজেট বাকি: ৳${budgetLeft.toLocaleString()}`;
-  document.getElementById('mkt-total-earning').textContent = `৳${totalEarning.toLocaleString()}`;
-  document.getElementById('mkt-net-roi').textContent = `নেট ব্যালেন্স: ৳${netBalance.toLocaleString()}`;
-  document.getElementById('mkt-cpa').textContent = `৳${cpa}`;
-  document.getElementById('mkt-ctr').textContent = `মোট ক্লিক: ${totalClicks}`;
+  document.getElementById('mkt-budget-rem').textContent = `বাজেট বাকি: ৳${budgetLeft.toLocaleString()}`;
+
+  // আলাদাভাবে আমার পাস লাভ এবং রাইডারদের আয় দেখানো
+  document.getElementById('mkt-pass-profit').textContent = `৳${myPassIncome.toLocaleString()}`;
+  document.getElementById('mkt-net-roi').textContent = `নেট লাভ (খরচ বাদে): ৳${netProfit.toLocaleString()}`;
+  document.getElementById('mkt-rider-gmv').textContent = `৳${riderTotalGmv.toLocaleString()}`;
+  document.getElementById('mkt-cpa-ctr').textContent = `CPA: ৳${cpa} • ক্লিক: ${totalClicks}`;
 
   const setBar = (txtId, barId, val, max, prefix = '') => {
     const pct = Math.min(100, Math.round((val / max) * 100));
