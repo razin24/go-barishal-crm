@@ -1,9 +1,9 @@
 // ============================================================
-// GO BARISHAL ADMIN CRM — SUPABASE & PURPLE BRAND ENGINE
+// GO BARISHAL ADMIN CRM — SUPABASE & GOOGLE SHEETS HYBRID ENGINE
 // ============================================================
 const SUPABASE_URL = 'https://bgtauxcgptxddbtbaxmx.supabase.co';
 const SUPABASE_ANON_KEY = 'sb_publishable_IZXzzBSjZzbFrqxnhhus9g_9myHECV8';
-const MKT_SHEET_API_URL = 'https://script.google.com/macros/s/AKfycbyL29E74kpQxb3_vjUu4CuZtWyUMLLxoC0ZqvIWIuo-PMT6tBXOt4_v7jSzFCQBlqCjEg/exec';
+const MKT_SHEET_API_URL = 'https://script.google.com/macros/s/আপনার_লিংক_এখানে/exec';
 const db = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 const sb = db;
 
@@ -142,7 +142,7 @@ function bindWorkspaceForms() {
     });
   }
 
-  // ইমেজ ব্যানার বিজ্ঞাপন ফর্ম (শিডিউলসহ)
+  // ১. ইমেজ ব্যানার বিজ্ঞাপন ফর্ম
   const bannerForm = document.getElementById('banner-ad-form');
   const annImageInput = document.getElementById('ann-image-url');
   if (annImageInput) {
@@ -190,7 +190,7 @@ function bindWorkspaceForms() {
     });
   }
 
-  // টেক্সট নোটিফিকেশন ও নোটিশ ফর্ম (শিডিউলসহ)
+  // ২. টেক্সট নোটিফিকেশন ও নোটিশ ফর্ম
   const annForm = document.getElementById('announcement-form');
   if (annForm) {
     annForm.addEventListener('submit', async (e) => {
@@ -219,6 +219,7 @@ function bindWorkspaceForms() {
     });
   }
 
+  // ৩. প্রোমো কোড ফর্ম
   const promoForm = document.getElementById('promo-form');
   if (promoForm) {
     promoForm.addEventListener('submit', async (e) => {
@@ -246,37 +247,47 @@ function bindWorkspaceForms() {
     });
   }
 
-  // মার্কেটিং খরচ ও ক্যাম্পেইন ফর্ম
+  // ৪. মার্কেটিং খরচ ও ক্যাম্পেইন ফর্ম (Google Sheets)
   const mktSpendForm = document.getElementById('marketing-spend-form');
   if (mktSpendForm) {
     mktSpendForm.addEventListener('submit', async (e) => {
       e.preventDefault();
       const btn = mktSpendForm.querySelector('button[type="submit"]');
-      btn.disabled = true;
-      btn.textContent = 'Google Sheet-এ সেভ হচ্ছে...';
+      if (btn) {
+        btn.disabled = true;
+        btn.textContent = 'Google Sheet-এ সেভ হচ্ছে...';
+      }
 
-      await fetch(MKT_SHEET_API_URL, {
-        method: 'POST',
-        mode: 'no-cors',
-        headers: { 'Content-Type': 'text/plain' },
-        body: JSON.stringify({
-          action: 'add_campaign',
-          campaign_name: document.getElementById('mkt-camp-name').value.trim(),
-          platform: document.getElementById('mkt-camp-platform').value,
-          spend_bdt: parseFloat(document.getElementById('mkt-camp-spend').value) || 0,
-          ad_reach: parseInt(document.getElementById('mkt-camp-reach').value, 10) || 0,
-          link_clicks: parseInt(document.getElementById('mkt-camp-clicks').value, 10) || 0,
-          notes: document.getElementById('mkt-camp-notes').value.trim()
-        })
-      });
-
-      btn.disabled = false;
-      btn.textContent = 'খরচ ও ডেটা সেভ করুন';
-      showToast('Google Sheet-এ মার্কেটিং ডেটা সেভ হয়েছে!');
-      mktSpendForm.reset();
-      setTimeout(loadMarketingHub, 800);
+      try {
+        await fetch(MKT_SHEET_API_URL, {
+          method: 'POST',
+          mode: 'no-cors',
+          headers: { 'Content-Type': 'text/plain' },
+          body: JSON.stringify({
+            action: 'add_campaign',
+            campaign_name: document.getElementById('mkt-camp-name').value.trim(),
+            platform: document.getElementById('mkt-camp-platform').value,
+            spend_bdt: parseFloat(document.getElementById('mkt-camp-spend').value) || 0,
+            ad_reach: parseInt(document.getElementById('mkt-camp-reach').value, 10) || 0,
+            link_clicks: parseInt(document.getElementById('mkt-camp-clicks').value, 10) || 0,
+            notes: document.getElementById('mkt-camp-notes').value.trim()
+          })
+        });
+        showToast('Google Sheet-এ মার্কেটিং ডেটা সেভ হয়েছে!');
+        mktSpendForm.reset();
+        setTimeout(loadMarketingHub, 800);
+      } catch (err) {
+        showToast('সেভ ব্যর্থ হয়েছে');
+      } finally {
+        if (btn) {
+          btn.disabled = false;
+          btn.textContent = 'খরচ ও ডেটা সেভ করুন';
+        }
+      }
     });
   }
+}
+
 document.addEventListener('DOMContentLoaded', async () => {
   if (window.location.search) {
     window.history.replaceState({}, document.title, window.location.pathname);
@@ -1452,7 +1463,7 @@ async function deletePromoCode(id) {
 }
 
 // ============================================================
-// 12. DEDICATED MARKETING & GROWTH COMMAND CENTER
+// 12. HYBRID MARKETING HUB (SUPABASE APP DATA + GOOGLE SHEETS)
 // ============================================================
 function toggleMarketingWorkspace() {
   isMarketingHubOpen = !isMarketingHubOpen;
@@ -1466,7 +1477,6 @@ function toggleMarketingWorkspace() {
   if (isMarketingHubOpen) {
     opsView.classList.add('hidden');
     mktView.classList.remove('hidden');
-    // প্রতিবার ওপেন হওয়ার সময় নতুন করে অ্যানিমেশন চালানো
     mktView.classList.remove('mkt-screen-animate');
     void mktView.offsetWidth;
     mktView.classList.add('mkt-screen-animate');
@@ -1492,14 +1502,12 @@ async function loadMarketingHub() {
   const sevenDaysAgo = new Date(now - 7 * 24 * 60 * 60 * 1000).toISOString();
   const thirtyDaysAgo = new Date(now - 30 * 24 * 60 * 60 * 1000).toISOString();
 
-  // ১. অ্যাপের রিয়েল ডাটা আসবে Supabase থেকে
   const [profRes, ridesRes, payRes] = await Promise.all([
     db.from('profiles').select('id, created_at'),
     db.from('rides').select('status, final_fare, offered_fare, created_at'),
     db.from('payments').select('amount, status')
   ]);
 
-  // ২. মার্কেটিং খরচ ও টাস্ক ডাটা আসবে Google Sheets থেকে
   let sheetData = { campaigns: [], tasks: [] };
   if (MKT_SHEET_API_URL && !MKT_SHEET_API_URL.includes('আপনার_লিংক')) {
     try {
@@ -1611,6 +1619,7 @@ async function deleteMarketingCampaign(id) {
   showToast('রেকর্ড মুছে ফেলা হয়েছে');
   setTimeout(loadMarketingHub, 700);
 }
+
 function copyMktAsset(key) {
   const el = document.getElementById(`mkt-asset-${key}`);
   if (!el) return;
