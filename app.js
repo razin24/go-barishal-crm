@@ -19,6 +19,7 @@ let lockCountdownTimer = null;
 let driverMarkersMap = {};
 let allMapDriversCache = [];
 let cachedAnnouncementsMap = {};
+let isMarketingHubOpen = false;
 
 function showToast(msg) {
   const box = document.getElementById('toast-container');
@@ -243,6 +244,27 @@ function bindWorkspaceForms() {
       loadPromoCodes();
     });
   }
+
+  // মার্কেটিং খরচ ও ক্যাম্পেইন ফর্ম
+  const mktSpendForm = document.getElementById('marketing-spend-form');
+  if (mktSpendForm) {
+    mktSpendForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const payload = {
+        campaign_name: document.getElementById('mkt-camp-name').value.trim(),
+        platform: document.getElementById('mkt-camp-platform').value,
+        spend_bdt: parseFloat(document.getElementById('mkt-camp-spend').value) || 0,
+        ad_reach: parseInt(document.getElementById('mkt-camp-reach').value, 10) || 0,
+        link_clicks: parseInt(document.getElementById('mkt-camp-clicks').value, 10) || 0,
+        notes: document.getElementById('mkt-camp-notes').value.trim()
+      };
+      const { error } = await db.from('marketing_campaigns').insert(payload);
+      if (error) return showToast('সেভ ব্যর্থ: ' + error.message);
+      showToast('মার্কেটিং খরচ ও ক্যাম্পেইন ডেটা সেভ হয়েছে!');
+      mktSpendForm.reset();
+      loadMarketingHub();
+    });
+  }
 }
 
 document.addEventListener('DOMContentLoaded', async () => {
@@ -369,6 +391,16 @@ function initSidebarEvents() {
 }
 
 function switchTab(tabName) {
+  if (isMarketingHubOpen) {
+    isMarketingHubOpen = false;
+    const opsView = document.querySelector('.main-shell > .content-area:not(#marketing-workspace-view)');
+    const mktView = document.getElementById('marketing-workspace-view');
+    const btn = document.getElementById('toggle-marketing-hub-btn');
+    if (mktView) mktView.classList.add('hidden');
+    if (opsView) opsView.classList.remove('hidden');
+    if (btn) btn.innerHTML = '<span>Marketing Hub</span>';
+  }
+
   activeTab = tabName;
   const sidebar = document.getElementById('sidebar');
   const backdrop = document.getElementById('sidebar-backdrop');
@@ -386,6 +418,7 @@ function switchTab(tabName) {
 }
 
 async function refreshCurrentTab() {
+  if (isMarketingHubOpen) return loadMarketingHub();
   if (activeTab === 'promotions') await loadPromotionsAndAds();
   if (activeTab === 'dashboard') await loadDashboard();
   if (activeTab === 'map') initOrRefreshMap();
@@ -620,7 +653,7 @@ function initOrRefreshMap(targetDriverId = null) {
   if (mapTimer) clearInterval(mapTimer);
   mapTimer = setInterval(() => {
     const autoEl = document.getElementById('auto-refresh-map');
-    if (activeTab === 'map' && autoEl && autoEl.checked) {
+    if (activeTab === 'map' && !isMarketingHubOpen && autoEl && autoEl.checked) {
       refreshMapData();
     }
   }, 5000);
@@ -1404,4 +1437,139 @@ async function deletePromoCode(id) {
   if (error) return showToast('ডিলিট ব্যর্থ হয়েছে');
   showToast('প্রোমো কোড মুছে ফেলা হয়েছে');
   loadPromoCodes();
+}
+
+// ============================================================
+// 12. DEDICATED MARKETING & GROWTH COMMAND CENTER
+// ============================================================
+function toggleMarketingWorkspace() {
+  isMarketingHubOpen = !isMarketingHubOpen;
+  const opsView = document.querySelector('.main-shell > .content-area:not(#marketing-workspace-view)');
+  const mktView = document.getElementById('marketing-workspace-view');
+  const btn = document.getElementById('toggle-marketing-hub-btn');
+
+  if (!opsView || !mktView) return;
+
+  if (isMarketingHubOpen) {
+    opsView.classList.add('hidden');
+    mktView.classList.remove('hidden');
+    if (btn) btn.innerHTML = '<span>← Operations CRM</span>';
+    loadMarketingHub();
+  } else {
+    mktView.classList.add('hidden');
+    opsView.classList.remove('hidden');
+    if (btn) btn.innerHTML = '<span>Marketing Hub</span>';
+    refreshCurrentTab();
+  }
+}
+
+async function loadMarketingHub() {
+  const now = Date.now();
+  const sevenDaysAgo = new Date(now - 7 * 24 * 60 * 60 * 1000).toISOString();
+  const thirtyDaysAgo = new Date(now - 30 * 24 * 60 * 60 * 1000).toISOString();
+
+  const [profRes, ridesRes, payRes, campRes, taskRes] = await Promise.all([
+    db.from('profiles').select('id, created_at'),
+    db.from('rides').select('status, final_fare, offered_fare, created_at'),
+    db.from('payments').select('amount, status'),
+    db.from('marketing_campaigns').select('*').order('created_at', { ascending: false }),
+    db.from('marketing_tasks').select('*').order('created_at', { ascending: true })
+  ]);
+
+  const profiles = profRes.data || [];
+  const rides = ridesRes.data || [];
+  const payments = payRes.data || [];
+  const campaigns = campRes.data || [];
+  const tasks = taskRes.data || [];
+
+  const weeklyUsers = profiles.filter((p) => p.created_at && p.created_at >= sevenDaysAgo).length;
+  const monthlyUsers = profiles.filter((p) => p.created_at && p.created_at >= thirtyDaysAgo).length;
+
+  const completedRides = rides.filter((r) => r.status === 'completed');
+  const weeklyRides = completedRides.filter((r) => r.created_at && r.created_at >= sevenDaysAgo).length;
+  const monthlyRides = completedRides.filter((r) => r.created_at && r.created_at >= thirtyDaysAgo).length;
+
+  const totalSpend = campaigns.reduce((s, c) => s + Number(c.spend_bdt || 0), 0);
+  const totalClicks = campaigns.reduce((s, c) => s + Number(c.link_clicks || 0), 0);
+  const passRevenue = payments.filter((p) => p.status === 'approved').reduce((s, p) => s + Number(p.amount || 0), 0);
+  const tripGmv = completedRides.reduce((s, r) => s + Number(r.final_fare || r.offered_fare || 0), 0);
+  const totalEarning = passRevenue + tripGmv;
+  const netBalance = totalEarning - totalSpend;
+  const cpa = monthlyUsers > 0 ? Math.round(totalSpend / monthlyUsers) : 0;
+  const budgetLeft = Math.max(0, 1000 - totalSpend);
+
+  document.getElementById('mkt-weekly-users').textContent = `+${weeklyUsers}`;
+  document.getElementById('mkt-weekly-rides').textContent = `${weeklyRides} টি সম্পন্ন রাইড`;
+  document.getElementById('mkt-monthly-users').textContent = `+${monthlyUsers}`;
+  document.getElementById('mkt-monthly-rides').textContent = `${monthlyRides} টি সম্পন্ন রাইড`;
+  document.getElementById('mkt-total-spend').textContent = `৳${totalSpend.toLocaleString()}`;
+  document.getElementById('mkt-budget-rem').textContent = `টেস্ট বাজেট বাকি: ৳${budgetLeft.toLocaleString()}`;
+  document.getElementById('mkt-total-earning').textContent = `৳${totalEarning.toLocaleString()}`;
+  document.getElementById('mkt-net-roi').textContent = `নেট ব্যালেন্স: ৳${netBalance.toLocaleString()}`;
+  document.getElementById('mkt-cpa').textContent = `৳${cpa}`;
+  document.getElementById('mkt-ctr').textContent = `মোট ক্লিক: ${totalClicks}`;
+
+  const setBar = (txtId, barId, val, max, prefix = '') => {
+    const pct = Math.min(100, Math.round((val / max) * 100));
+    const txtEl = document.getElementById(txtId);
+    const barEl = document.getElementById(barId);
+    if (txtEl) txtEl.textContent = `${prefix}${val} / ${prefix}${max}`;
+    if (barEl) barEl.style.width = `${pct}%`;
+  };
+  setBar('target-weekly-user-txt', 'target-weekly-user-bar', weeklyUsers, 50);
+  setBar('target-monthly-user-txt', 'target-monthly-user-bar', monthlyUsers, 200);
+  setBar('target-monthly-ride-txt', 'target-monthly-ride-bar', monthlyRides, 150);
+  setBar('target-budget-txt', 'target-budget-bar', totalSpend, 1000, '৳');
+
+  const doneCount = tasks.filter((t) => t.is_done).length;
+  const donePct = tasks.length ? Math.round((doneCount / tasks.length) * 100) : 0;
+  const progBadge = document.getElementById('mkt-task-progress');
+  if (progBadge) progBadge.textContent = `${donePct}% Done (${doneCount}/${tasks.length})`;
+
+  const taskListEl = document.getElementById('marketing-tasks-list');
+  if (taskListEl) {
+    taskListEl.innerHTML = tasks.map((t) => `
+      <label style="display:flex; align-items:flex-start; gap:10px; padding:10px; border:1px solid #E2E8F0; border-radius:10px; background:${t.is_done ? '#F0FDF4' : '#FFFFFF'}; cursor:pointer;">
+        <input type="checkbox" ${t.is_done ? 'checked' : ''} onchange="toggleMarketingTask('${t.id}', this.checked)" style="margin-top:3px; accent-color:#4A148C;" />
+        <div style="flex:1;">
+          <div style="font-size:11px; font-weight:700; color:#4A148C;">${t.phase_label} • টার্গেট: ${t.target_metric || 'N/A'}</div>
+          <div style="font-size:13px; font-weight:600; color:${t.is_done ? '#15803D' : '#0F172A'}; text-decoration:${t.is_done ? 'line-through' : 'none'};">${t.task_title}</div>
+        </div>
+      </label>
+    `).join('');
+  }
+
+  const tbody = document.getElementById('marketing-campaigns-tbody');
+  if (tbody) {
+    tbody.innerHTML = campaigns.map((c) => `
+      <tr>
+        <td>${c.campaign_date || new Date(c.created_at).toLocaleDateString('en-GB')}</td>
+        <td><strong>${c.campaign_name}</strong></td>
+        <td><span class="status-badge sb-blue">${c.platform}</span></td>
+        <td><strong>৳${c.spend_bdt}</strong></td>
+        <td>Reach: ${c.ad_reach || 0} • Clicks: ${c.link_clicks || 0}</td>
+        <td class="muted-text">${c.notes || '—'}</td>
+        <td><button class="btn btn-sm btn-danger" onclick="deleteMarketingCampaign('${c.id}')">Delete</button></td>
+      </tr>
+    `).join('') || '<tr><td colspan="7">এখনো কোনো মার্কেটিং খরচ যোগ করা হয়নি।</td></tr>';
+  }
+}
+
+async function toggleMarketingTask(id, isDone) {
+  await db.from('marketing_tasks').update({ is_done: isDone }).eq('id', id);
+  loadMarketingHub();
+}
+
+async function deleteMarketingCampaign(id) {
+  if (!confirm('এই ক্যাম্পেইন রেকর্ডটি মুছে ফেলতে চান?')) return;
+  await db.from('marketing_campaigns').delete().eq('id', id);
+  showToast('ক্যাম্পেইন রেকর্ড মুছে ফেলা হয়েছে');
+  loadMarketingHub();
+}
+
+function copyMktAsset(key) {
+  const el = document.getElementById(`mkt-asset-${key}`);
+  if (!el) return;
+  navigator.clipboard.writeText(el.textContent.trim());
+  showToast('অ্যাড কপি ক্লিপবোর্ডে কপি হয়েছে!');
 }
