@@ -2,9 +2,8 @@
 // GO BARISHAL ADMIN CRM — SUPABASE & PURPLE BRAND ENGINE
 // ============================================================
 const SUPABASE_URL = 'https://bgtauxcgptxddbtbaxmx.supabase.co';
-YOUR_APPS_SCRIPT_WEB_APP_URL_HERE'
-const MKT_SHEET_API_URL = 'https://script.google.com/macros/s/AKfycbyL29E74kpQxb3_vjUu4CuZtWyUMLLxoC0ZqvIWIuo-PMT6tBXOt4_v7jSzFCQBlqCjEg/exec';
 const SUPABASE_ANON_KEY = 'sb_publishable_IZXzzBSjZzbFrqxnhhus9g_9myHECV8';
+const MKT_SHEET_API_URL = 'https://script.google.com/macros/s/AKfycbyL29E74kpQxb3_vjUu4CuZtWyUMLLxoC0ZqvIWIuo-PMT6tBXOt4_v7jSzFCQBlqCjEg/exec';
 const db = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 const sb = db;
 
