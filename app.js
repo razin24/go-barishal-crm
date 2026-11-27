@@ -1444,7 +1444,7 @@ async function deletePromoCode(id) {
 // ============================================================
 function toggleMarketingWorkspace() {
   isMarketingHubOpen = !isMarketingHubOpen;
-  const opsView = document.querySelector('.main-shell > .content-area:not(#marketing-workspace-view)');
+  const opsView = document.querySelector('.main-panel > .content-area:not(#marketing-workspace-view)');
   const mktView = document.getElementById('marketing-workspace-view');
   const btn = document.getElementById('toggle-marketing-hub-btn');
 
